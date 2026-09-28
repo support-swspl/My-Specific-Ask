@@ -1,0 +1,116 @@
+{
+ "actions": [],
+ "allow_bulk_edit": 1,
+ "allow_rename": 1,
+ "creation": "2026-09-27 12:10:56.530080",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "memebrs_give_section",
+  "company_name",
+  "designation",
+  "department",
+  "industry",
+  "classification",
+  "known_since",
+  "interaction_frequency",
+  "nature_of_relationship",
+  "city",
+  "multi_location",
+  "mg_country"
+ ],
+ "fields": [
+  {
+   "fieldname": "company_name",
+   "fieldtype": "Data",
+   "label": "Company Name",
+   "reqd": 1
+  },
+  {
+   "fieldname": "industry",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Industry",
+   "reqd": 1
+  },
+  {
+   "fieldname": "classification",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Classification",
+   "reqd": 1
+  },
+  {
+   "fieldname": "city",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "City",
+   "reqd": 1
+  },
+  {
+   "fieldname": "multi_location",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Multi Location",
+   "options": "None\nYes\nCity\nCountry",
+   "reqd": 1
+  },
+  {
+   "fieldname": "department",
+   "fieldtype": "Data",
+   "label": "Department"
+  },
+  {
+   "fieldname": "known_since",
+   "fieldtype": "Data",
+   "label": "Known Since"
+  },
+  {
+   "fieldname": "interaction_frequency",
+   "fieldtype": "Select",
+   "label": "Interaction Frequency",
+   "options": "Daily\nWeekly\nMonthly\nQuarterly\nYearly\nOnly as needed\nPeriodically\nRarely",
+   "reqd": 1
+  },
+  {
+   "fieldname": "nature_of_relationship",
+   "fieldtype": "Select",
+   "label": "Nature of Relationship",
+   "options": "Professional\nWork Colleague\nClient\nService Provider\nTransactional\nFriend\nRelative\nFamily\nAcquaintance\nOthers",
+   "reqd": 1
+  },
+  {
+   "fieldname": "designation",
+   "fieldtype": "Data",
+   "label": "Designation"
+  },
+  {
+   "fieldname": "memebrs_give_section",
+   "fieldtype": "Section Break",
+   "label": "Memebrs Give"
+  },
+  {
+   "fieldname": "mg_country",
+   "fieldtype": "Select",
+   "label": "MG Country",
+   "options": "India",
+   "reqd": 1
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2026-09-27 12:54:04.333288",
+ "modified_by": "Administrator",
+ "module": "My Specific Ask",
+ "name": "Members Give",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": []
+}

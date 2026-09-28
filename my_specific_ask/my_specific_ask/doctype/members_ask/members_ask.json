@@ -1,0 +1,87 @@
+{
+ "actions": [],
+ "allow_bulk_edit": 1,
+ "allow_rename": 1,
+ "creation": "2026-09-27 12:34:06.772177",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "company_name",
+  "full_name",
+  "department",
+  "industry",
+  "classification",
+  "city",
+  "ma_country",
+  "required_for"
+ ],
+ "fields": [
+  {
+   "fieldname": "company_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Company Name",
+   "reqd": 1
+  },
+  {
+   "fieldname": "full_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Full Name"
+  },
+  {
+   "fieldname": "department",
+   "fieldtype": "Data",
+   "label": "Department"
+  },
+  {
+   "fieldname": "city",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "City",
+   "reqd": 1
+  },
+  {
+   "fieldname": "industry",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Industry",
+   "reqd": 1
+  },
+  {
+   "fieldname": "classification",
+   "fieldtype": "Data",
+   "label": "Classification",
+   "reqd": 1
+  },
+  {
+   "fieldname": "required_for",
+   "fieldtype": "Text",
+   "label": "Required for",
+   "reqd": 1
+  },
+  {
+   "fieldname": "ma_country",
+   "fieldtype": "Select",
+   "label": "MA Country",
+   "options": "India",
+   "reqd": 1
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2026-09-27 12:54:57.981296",
+ "modified_by": "Administrator",
+ "module": "My Specific Ask",
+ "name": "Members Ask",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": []
+}

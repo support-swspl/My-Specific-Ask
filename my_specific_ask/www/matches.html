@@ -1,0 +1,94 @@
+{% extends "templates/web.html" %}
+
+{% block head_include %}
+<!-- Include Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          bniRed: '#CF2030',
+        }
+      }
+    }
+  }
+</script>
+<style>
+    /* Clean up default Frappe page padding */
+    .page-content { padding: 0 !important; }
+</style>
+{% endblock %}
+
+{% block page_content %}
+<div class="bg-gray-50 min-h-screen">
+    
+    <!-- Navbar -->
+    <nav class="bg-bniRed text-white shadow-md p-4">
+        <div class="max-w-6xl mx-auto flex justify-between items-center">
+            <h1 class="text-2xl font-bold tracking-tight">MySpecificAsk.com</h1>
+            <span class="text-sm font-medium">{{ frappe.session.user }}</span>
+        </div>
+    </nav>
+
+    <div class="max-w-6xl mx-auto py-8 px-4">
+        
+        {% if error_message %}
+            <!-- Error State: User not linked -->
+            <div class="bg-red-100 border-l-4 border-bniRed text-red-700 p-4 rounded mb-6">
+                <p>{{ error_message }}</p>
+                <p class="text-sm mt-2">Please ask your administrator to link your User account to a BNI Member record.</p>
+            </div>
+        {% else %}
+            
+            <!-- Dashboard Header: Specific Ask -->
+            <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200 mb-8">
+                <h2 class="text-sm text-gray-500 uppercase font-semibold tracking-wider">Your Current Specific Ask</h2>
+                <p class="text-xl font-medium text-gray-800 mt-2">
+                    "{{ member.current_specific_ask or 'No specific ask set. Go to your profile to set one!' }}"
+                </p>
+            </div>
+
+            <!-- Match Results Section -->
+            <h3 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2">Top 1-2-1 Matches for You</h3>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {% if not matches %}
+                    <p class="text-gray-500 italic col-span-full">No perfect matches found. Try broadening your specific ask.</p>
+                {% else %}
+                    {% for match in matches %}
+                    <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition">
+                        <div class="bg-gray-100 px-4 py-3 border-b flex justify-between items-center">
+                            <span class="font-bold text-gray-700">{{ match.full_name }}</span>
+                            <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full font-semibold">
+                                {{ match.match_score }}% Match
+                            </span>
+                        </div>
+                        <div class="p-4">
+                            <p class="text-sm text-gray-600 mb-1"><strong>Category:</strong> {{ match.category }}</p>
+                            <p class="text-sm text-gray-600 mb-3"><strong>Chapter:</strong> {{ match.chapter }}</p>
+                            
+                            <div class="mb-4">
+                                <span class="text-xs text-gray-500 uppercase font-semibold">Why you matched:</span>
+                                <ul class="list-disc list-inside text-sm text-gray-700 mt-1">
+                                    {% for reason in match.match_reasons %}
+                                        <li>{{ reason }}</li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+
+                            <a href="https://wa.me/?text=Hi%20{{ match.full_name }},%20I%20saw%20we%20are%20a%20great%20match%20on%20MySpecificAsk.%20Let's%20do%20a%201-2-1!" 
+                               target="_blank"
+                               class="block w-full text-center bg-bniRed hover:bg-red-700 text-white font-semibold py-2 px-4 rounded transition">
+                                Request 1-2-1
+                            </a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
