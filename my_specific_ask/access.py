@@ -93,7 +93,10 @@ def setup_manager():
 		})
 		user.insert(ignore_permissions=True)
 
-	all_roles = frappe.get_all("Role", filters={"disabled": 0, "name": ["not in", AUTOMATIC_ROLES]}, pluck="name")
+	# Every role except the member role, which carries member-only 2FA
+	all_roles = frappe.get_all(
+		"Role", filters={"disabled": 0, "name": ["not in", (*AUTOMATIC_ROLES, MEMBER_ROLE)]}, pluck="name"
+	)
 	missing = set(all_roles) - {r.role for r in user.roles}
 	if missing or user.module_profile or user.block_modules or user.user_type != "System User":
 		user.user_type = "System User"
@@ -102,6 +105,9 @@ def setup_manager():
 		for role in sorted(missing):
 			user.append("roles", {"role": role})
 		user.save(ignore_permissions=True)
+
+	for admin in (MANAGER, "Administrator"):
+		frappe.get_doc("User", admin).remove_roles(MEMBER_ROLE)
 
 
 def user_validate(doc, method=None):
