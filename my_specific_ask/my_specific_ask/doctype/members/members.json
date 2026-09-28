@@ -1,0 +1,270 @@
+{
+ "actions": [],
+ "allow_bulk_edit": 1,
+ "allow_rename": 1,
+ "autoname": "MD-.#######",
+ "creation": "2026-09-27 10:37:07.153434",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "members_details_section",
+  "full_name",
+  "company_name",
+  "mobile_number",
+  "email",
+  "user",
+  "column_break_ldro",
+  "website",
+  "city",
+  "state",
+  "country",
+  "networking_details_section",
+  "network",
+  "column_break_yihs",
+  "since",
+  "column_break_amfz",
+  "status",
+  "section_break_rrom",
+  "chapter_name",
+  "region",
+  "column_break_jhjb",
+  "ciry",
+  "members_country",
+  "category__specialisation_section",
+  "category",
+  "industry__segment",
+  "column_break_klcj",
+  "classification",
+  "power_team",
+  "section_break_nvev",
+  "members_gives",
+  "section_break_ivxj",
+  "members_ask"
+ ],
+ "fields": [
+  {
+   "fieldname": "members_details_section",
+   "fieldtype": "Section Break",
+   "label": "Members Details"
+  },
+  {
+   "fieldname": "full_name",
+   "fieldtype": "Data",
+   "label": "Full Name",
+   "reqd": 1
+  },
+  {
+   "fieldname": "company_name",
+   "fieldtype": "Data",
+   "label": "Company Name",
+   "reqd": 1
+  },
+  {
+   "fieldname": "mobile_number",
+   "fieldtype": "Data",
+   "label": "Mobile Number",
+   "reqd": 1
+  },
+  {
+   "fieldname": "email",
+   "fieldtype": "Data",
+   "label": "Email",
+   "reqd": 1
+  },
+  {
+   "description": "Login that owns this member profile. Only this user (and System Managers) can edit it.",
+   "fieldname": "user",
+   "fieldtype": "Link",
+   "label": "User",
+   "options": "User",
+   "search_index": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "column_break_ldro",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "website",
+   "fieldtype": "Data",
+   "label": "Website"
+  },
+  {
+   "fieldname": "city",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "City",
+   "reqd": 1
+  },
+  {
+   "fieldname": "state",
+   "fieldtype": "Data",
+   "label": "State"
+  },
+  {
+   "fieldname": "country",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Country",
+   "options": "India",
+   "reqd": 1
+  },
+  {
+   "fieldname": "networking_details_section",
+   "fieldtype": "Section Break",
+   "label": "Networking Details"
+  },
+  {
+   "fieldname": "network",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Network",
+   "options": "Network Type",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_yihs",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "since",
+   "fieldtype": "Date",
+   "label": "Since"
+  },
+  {
+   "fieldname": "column_break_amfz",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Status",
+   "options": "Active\nEx Member\nBreak\nVisitor",
+   "reqd": 1
+  },
+  {
+   "fieldname": "section_break_rrom",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "chapter_name",
+   "fieldtype": "Data",
+   "label": "Chapter Name",
+   "reqd": 1
+  },
+  {
+   "fieldname": "region",
+   "fieldtype": "Data",
+   "label": "Region",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_jhjb",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "ciry",
+   "fieldtype": "Data",
+   "label": "City",
+   "reqd": 1
+  },
+  {
+   "fieldname": "members_country",
+   "fieldtype": "Select",
+   "label": "Country",
+   "options": "India",
+   "reqd": 1
+  },
+  {
+   "fieldname": "category__specialisation_section",
+   "fieldtype": "Section Break",
+   "label": "Category / Specialisation "
+  },
+  {
+   "fieldname": "category",
+   "fieldtype": "Data",
+   "label": "Category",
+   "reqd": 1
+  },
+  {
+   "fieldname": "industry__segment",
+   "fieldtype": "Data",
+   "label": "Industry / Segment",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_klcj",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "classification",
+   "fieldtype": "Data",
+   "label": "Classification ",
+   "reqd": 1
+  },
+  {
+   "fieldname": "power_team",
+   "fieldtype": "Link",
+   "label": "Power Team",
+   "options": "Power Team",
+   "reqd": 1
+  },
+  {
+   "fieldname": "section_break_nvev",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "members_gives",
+   "fieldtype": "Table",
+   "label": "Members Give's",
+   "options": "Members Give"
+  },
+  {
+   "fieldname": "section_break_ivxj",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "members_ask",
+   "fieldtype": "Table",
+   "label": "Members Ask",
+   "options": "Members Ask"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-09-28 12:30:00.000000",
+ "modified_by": "Administrator",
+ "module": "My Specific Ask",
+ "name": "Members",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Specific Ask Member",
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

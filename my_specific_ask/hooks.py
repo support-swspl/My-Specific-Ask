@@ -139,6 +139,17 @@ app_license = "mit"
 # has_permission = {
 # 	"Event": "frappe.desk.doctype.event.event.has_permission",
 # }
+has_permission = {
+	"Members": "my_specific_ask.my_specific_ask.doctype.members.members.has_permission",
+}
+
+after_migrate = ["my_specific_ask.access.setup"]
+
+doc_events = {
+	"User": {
+		"validate": "my_specific_ask.access.user_validate",
+	},
+}
 
 # Document Events
 # ---------------
