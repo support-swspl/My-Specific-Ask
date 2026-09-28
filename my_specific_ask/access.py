@@ -9,6 +9,7 @@ every other module is blocked. MANAGER gets every role.
 
 import frappe
 from frappe.permissions import AUTOMATIC_ROLES, add_permission
+from frappe.utils import get_url
 
 MEMBER_ROLE = "Specific Ask Member"
 ADMIN_ROLE = "System Manager"
@@ -20,13 +21,56 @@ MODULE_PROFILE = "Specific Ask Member"
 # Link targets on the Members form: members need to pick values, not browse them
 LINKED_DOCTYPES = ("Network Type", "Power Team")
 
+EMAIL_TEMPLATE = "Member Welcome"
+WELCOME_EMAIL_HTML = """<p>Dear {{ first_name }},</p>
+
+<p>Welcome to <b>My Specific Ask</b>, the 1-2-1 match making platform for our members.
+Your member account is ready.</p>
+
+<p>Your login ID: <b>{{ user }}</b></p>
+
+<p>Please click the button below to set your password:</p>
+
+<p><a href="{{ link }}" style="display:inline-block;padding:10px 20px;background:#171717;color:#ffffff;
+text-decoration:none;border-radius:6px;font-weight:600;">Set Your Password</a></p>
+
+<p style="font-size:12px;color:#6b7280;">Or copy this link into your browser:<br>{{ link }}</p>
+
+<p>After setting your password, log in at <a href="{{ login_url }}">{{ login_url }}</a>.
+For your security, every login will also ask for a verification code that we send to this email address.</p>
+
+<p>In My Specific Ask you can view all members and update your own profile, Gives and Asks.</p>
+
+<p>If this link has expired, click <b>Forgot Password</b> on the login page to get a new one.</p>
+
+<p>Regards,<br>Milind Lokare<br>My Specific Ask</p>
+"""
+
+LOGIN_EMAIL_TEMPLATE = "Member Login Welcome"
+LOGIN_EMAIL_HTML = """<p>Dear {{ first_name }},</p>
+
+<p>Welcome to <b>My Specific Ask</b>! You have logged in successfully.</p>
+
+<p>Here you can:</p>
+<ul>
+<li>View the profiles of all members</li>
+<li>Keep your own profile, Gives and Asks up to date</li>
+</ul>
+
+<p>Log in any time at <a href="{{ login_url }}">{{ login_url }}</a> with your login ID <b>{{ user }}</b>.</p>
+
+<p>Regards,<br>Milind Lokare<br>My Specific Ask</p>
+"""
+
 
 def setup():
 	"""after_migrate hook; safe to run repeatedly."""
 	ensure_member_role()
 	grant_link_select()
 	ensure_workspace()
+	ensure_desktop_icon()
 	ensure_module_profile()
+	ensure_email_template()
 	setup_manager()
 
 	for user in frappe.get_all("Has Role", filters={"role": MEMBER_ROLE, "parenttype": "User"}, pluck="parent"):
@@ -68,6 +112,36 @@ def ensure_workspace():
 	}).insert(ignore_permissions=True)
 
 
+def ensure_desktop_icon():
+	"""v16 desk home shows an icon only when its Workspace Sidebar has an item the user can open."""
+	if not frappe.db.exists("Workspace Sidebar", WORKSPACE):
+		frappe.get_doc({
+			"doctype": "Workspace Sidebar",
+			"title": WORKSPACE,
+			"app": "my_specific_ask",
+			"module": APP_MODULE,
+			"header_icon": "users",
+			"items": [
+				{"label": "Home", "type": "Link", "link_type": "Workspace", "link_to": WORKSPACE, "icon": "home"},
+				{"label": "Members", "type": "Link", "link_type": "DocType", "link_to": "Members", "icon": "users"},
+			],
+		}).insert(ignore_permissions=True)
+
+	if not frappe.db.exists("Desktop Icon", WORKSPACE):
+		frappe.get_doc({
+			"doctype": "Desktop Icon",
+			"label": WORKSPACE,
+			"icon_type": "Link",
+			"link_type": "Workspace Sidebar",
+			"link_to": WORKSPACE,
+			"icon": "users",
+			"standard": 1,
+		}).insert(ignore_permissions=True)
+
+	frappe.cache.delete_key("desktop_icons")
+	frappe.cache.delete_key("bootinfo")
+
+
 def ensure_module_profile():
 	"""Block every module except this app's; refreshed on each migrate so new apps stay hidden."""
 	blocked = [m for m in frappe.get_all("Module Def", pluck="name") if m != APP_MODULE]
@@ -78,6 +152,43 @@ def ensure_module_profile():
 		profile.module_profile_name = MODULE_PROFILE
 	profile.set("block_modules", [{"module": m} for m in sorted(blocked)])
 	profile.save(ignore_permissions=True)
+
+
+def ensure_email_template():
+	"""One email for new logins and password resets: welcome text plus the set-password link.
+
+	Created once; edit the wording later in Email Template > Member Welcome.
+	"""
+	if not frappe.db.exists("Email Template", EMAIL_TEMPLATE):
+		frappe.get_doc({
+			"doctype": "Email Template",
+			"__newname": EMAIL_TEMPLATE,
+			"subject": "Welcome to My Specific Ask - set your password",
+			"use_html": 1,
+			"response_html": WELCOME_EMAIL_HTML,
+		}).insert(ignore_permissions=True)
+
+	if not frappe.db.exists("Email Template", LOGIN_EMAIL_TEMPLATE):
+		frappe.get_doc({
+			"doctype": "Email Template",
+			"__newname": LOGIN_EMAIL_TEMPLATE,
+			"subject": "Welcome to My Specific Ask",
+			"use_html": 1,
+			"response_html": LOGIN_EMAIL_HTML,
+		}).insert(ignore_permissions=True)
+
+	settings = frappe.get_single("System Settings")
+	changed = False
+	if not settings.welcome_email_template or not settings.reset_password_template:
+		settings.welcome_email_template = settings.welcome_email_template or EMAIL_TEMPLATE
+		settings.reset_password_template = settings.reset_password_template or EMAIL_TEMPLATE
+		changed = True
+	# The welcome link uses the reset expiry; Frappe's 20-minute default is too short for invitations
+	if int(settings.reset_password_link_expiry_duration or 0) == 1200:
+		settings.reset_password_link_expiry_duration = 3 * 24 * 60 * 60
+		changed = True
+	if changed:
+		settings.save(ignore_permissions=True)
 
 
 def setup_manager():
@@ -108,6 +219,39 @@ def setup_manager():
 
 	for admin in (MANAGER, "Administrator"):
 		frappe.get_doc("User", admin).remove_roles(MEMBER_ROLE)
+
+
+def send_login_welcome(login_manager):
+	"""on_login hook (runs after 2FA): welcome email on a member's first successful login."""
+	user = login_manager.user
+	if user in (MANAGER, "Administrator") or MEMBER_ROLE not in frappe.get_roles(user):
+		return
+
+	sent_key = f"msa_login_welcome_sent:{user}"
+	if frappe.db.get_default(sent_key):
+		return
+	frappe.db.set_default(sent_key, 1)
+	frappe.enqueue(
+		"my_specific_ask.access.send_login_welcome_mail", queue="short", user=user, enqueue_after_commit=True
+	)
+
+
+def send_login_welcome_mail(user):
+	if not frappe.db.exists("Email Template", LOGIN_EMAIL_TEMPLATE):
+		return
+	user_doc = frappe.get_doc("User", user)
+	email = frappe.get_doc("Email Template", LOGIN_EMAIL_TEMPLATE).get_formatted_email({
+		"first_name": user_doc.first_name or user_doc.full_name,
+		"user": user,
+		"login_url": get_url(),
+	})
+	frappe.sendmail(
+		recipients=user_doc.email,
+		subject=email["subject"],
+		content=email["message"],
+		with_container=True,
+		delayed=False,
+	)
 
 
 def user_validate(doc, method=None):

@@ -24,10 +24,10 @@ def has_permission(doc, ptype=None, user=None):
 	"""Everyone with read access sees all members; only the linked user can modify a profile."""
 	user = user or frappe.session.user
 	if ptype in READ_PTYPES or is_admin(user):
-		return None
+		return True
 	if doc.user != user:
 		return False
-	return None
+	return True
 
 
 def create_member_users(send_welcome_email=0):
@@ -54,7 +54,8 @@ def create_member_users(send_welcome_email=0):
 			})
 			user.insert(ignore_permissions=True)
 			created += 1
-		user.add_roles(MEMBER_ROLE)
+		if not is_admin(user.name):
+			user.add_roles(MEMBER_ROLE)
 
 		frappe.db.set_value("Members", m.name, "user", email)
 		linked += 1
