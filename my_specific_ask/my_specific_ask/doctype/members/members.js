@@ -7,6 +7,10 @@ frappe.ui.form.on("Members", {
 
 		if (frm.doc.user === frappe.session.user) {
 			frm.set_df_property("user", "read_only", 1);
+			// Profiles created at sign-up start with only name and email
+			if (!frm.doc.company_name) {
+				frm.set_intro(__("Welcome! Please complete your profile and click Save."), "yellow");
+			}
 		} else {
 			frm.disable_form();
 			frm.set_intro(__("You can view this member. Only your own profile is editable."), "blue");

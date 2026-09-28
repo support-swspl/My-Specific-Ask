@@ -71,6 +71,7 @@ def setup():
 	ensure_desktop_icon()
 	ensure_module_profile()
 	ensure_email_template()
+	ensure_signup()
 	setup_manager()
 
 	for user in frappe.get_all("Has Role", filters={"role": MEMBER_ROLE, "parenttype": "User"}, pluck="parent"):
@@ -191,6 +192,14 @@ def ensure_email_template():
 		settings.save(ignore_permissions=True)
 
 
+def ensure_signup():
+	"""Open self sign-up when the site config has msa_open_signup = 1; sign-ups become members."""
+	if not frappe.conf.get("msa_open_signup"):
+		return
+	frappe.db.set_single_value("Website Settings", "disable_signup", 0)
+	frappe.db.set_single_value("Portal Settings", "default_role", MEMBER_ROLE)
+
+
 def setup_manager():
 	if frappe.db.exists("User", MANAGER):
 		user = frappe.get_doc("User", MANAGER)
@@ -252,6 +261,36 @@ def send_login_welcome_mail(user):
 		with_container=True,
 		delayed=False,
 	)
+
+
+def ensure_member_profile(doc, method=None):
+	"""User on_update hook: every member login gets its own Members record.
+
+	Links a Members record with the same email if one is waiting, else creates a draft
+	(e.g. after self sign-up) that the member completes on first save.
+	"""
+	roles = {r.role for r in doc.roles}
+	if doc.name == MANAGER or MEMBER_ROLE not in roles or ADMIN_ROLE in roles:
+		return
+	if frappe.db.exists("Members", {"user": doc.name}):
+		return
+
+	waiting = frappe.db.get_value("Members", {"email": doc.email, "user": ["is", "not set"]}, "name")
+	if waiting:
+		frappe.db.set_value("Members", waiting, "user", doc.name)
+		return
+
+	member = frappe.get_doc({
+		"doctype": "Members",
+		"full_name": doc.full_name or doc.first_name,
+		"email": doc.email,
+		"user": doc.name,
+		"status": "Active",
+		"country": "India",
+		"members_country": "India",
+	})
+	member.flags.ignore_mandatory = True
+	member.insert(ignore_permissions=True)
 
 
 def user_validate(doc, method=None):
