@@ -36,8 +36,7 @@ text-decoration:none;border-radius:6px;font-weight:600;">Set Your Password</a></
 
 <p style="font-size:12px;color:#6b7280;">Or copy this link into your browser:<br>{{ link }}</p>
 
-<p>After setting your password, log in at <a href="{{ login_url }}">{{ login_url }}</a>.
-For your security, every login will also ask for a verification code that we send to this email address.</p>
+<p>After setting your password, log in at <a href="{{ login_url }}">{{ login_url }}</a>.</p>
 
 <p>In My Specific Ask you can view all members and update your own profile, Gives and Asks.</p>
 

@@ -1,0 +1,58 @@
+{
+ "app": "my_specific_ask",
+ "charts": [],
+ "content": "[{\"data\": {\"col\": 12, \"text\": \"<span class=\\\"h4\\\"><b>My Specific Ask</b></span>\"}, \"id\": \"msa_header\", \"type\": \"header\"}, {\"data\": {\"col\": 3, \"shortcut_name\": \"Members\"}, \"id\": \"msa_members\", \"type\": \"shortcut\"}, {\"id\": \"msa_search_gives\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Search Gives\", \"col\": 3}}, {\"id\": \"msa_search_asks\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Search Asks\", \"col\": 3}}]",
+ "creation": "2026-09-29 10:34:17.949972",
+ "custom_blocks": [],
+ "docstatus": 0,
+ "doctype": "Workspace",
+ "hide_custom": 0,
+ "icon": "users",
+ "idx": 0,
+ "indicator_color": "green",
+ "is_hidden": 0,
+ "label": "My Specific Ask",
+ "link_type": "DocType",
+ "links": [],
+ "modified": "2026-09-29 14:31:38.556609",
+ "modified_by": "milind@swspl.com",
+ "module": "My Specific Ask",
+ "name": "My Specific Ask",
+ "number_cards": [],
+ "owner": "Administrator",
+ "public": 1,
+ "quick_lists": [],
+ "roles": [
+  {
+   "role": "Specific Ask Member"
+  },
+  {
+   "role": "System Manager"
+  }
+ ],
+ "sequence_id": 0.0,
+ "shortcuts": [
+  {
+   "doc_view": "List",
+   "label": "Members",
+   "link_to": "Members",
+   "type": "DocType"
+  },
+  {
+   "doc_view": "",
+   "label": "Search Gives",
+   "link_to": "Search Gives",
+   "report_ref_doctype": "Members",
+   "type": "Report"
+  },
+  {
+   "doc_view": "",
+   "label": "Search Asks",
+   "link_to": "Search Asks",
+   "report_ref_doctype": "Members",
+   "type": "Report"
+  }
+ ],
+ "title": "My Specific Ask",
+ "type": "Workspace"
+}
