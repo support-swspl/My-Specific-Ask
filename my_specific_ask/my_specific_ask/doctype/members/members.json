@@ -77,7 +77,6 @@
    "fieldtype": "Link",
    "label": "User",
    "options": "User",
-   "search_index": 1,
    "unique": 1
   },
   {
@@ -234,7 +233,7 @@
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-09-28 12:30:00.000000",
+ "modified": "2026-09-29 11:26:58.773782",
  "modified_by": "Administrator",
  "module": "My Specific Ask",
  "name": "Members",
