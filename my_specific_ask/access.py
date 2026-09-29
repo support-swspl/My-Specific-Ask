@@ -98,14 +98,15 @@ def grant_link_select():
 
 
 def ensure_workspace():
+	# No `app` on the workspace: migrate deletes public workspaces that have an app but no JSON file in it
 	if frappe.db.exists("Workspace", WORKSPACE):
+		frappe.db.set_value("Workspace", WORKSPACE, "app", None)
 		return
 	frappe.get_doc({
 		"doctype": "Workspace",
 		"label": WORKSPACE,
 		"title": WORKSPACE,
 		"module": APP_MODULE,
-		"app": "my_specific_ask",
 		"public": 1,
 		"icon": "users",
 		"content": frappe.as_json([
