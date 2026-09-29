@@ -315,9 +315,37 @@ def boot_session(bootinfo):
 
 
 def refresh_member_boot(doc, method=None):
-	"""Members on_update: drop the member's cached boot so the redirect stops once the profile is saved."""
+	"""Members on_update: drop the member's cached boot and home page so the redirect stops once saved."""
 	if doc.user:
 		frappe.cache.hdel("bootinfo", doc.user)
+		frappe.cache.hdel("home_page", doc.user)
+
+
+def profile_url(profile):
+	return f"/desk/members/{profile}"
+
+
+def send_to_incomplete_profile(login_manager):
+	"""on_login hook: after login, a member with an unfinished profile lands straight on it."""
+	if profile := get_incomplete_profile(login_manager.user):
+		# The login page goes to get_home_page(), which returns this cached value first
+		frappe.cache.hset("home_page", login_manager.user, profile_url(profile).lstrip("/"))
+
+
+@frappe.whitelist(allow_guest=True, methods=["POST"])
+def update_password(
+	new_password: str, logout_all_sessions: int = 0, key: str | None = None, old_password: str | None = None
+):
+	"""Frappe's update_password (set-password page), but a member with an unfinished profile
+	is sent to it instead of /desk."""
+	from frappe.core.doctype.user.user import update_password as frappe_update_password
+
+	redirect = frappe_update_password(
+		new_password, logout_all_sessions=logout_all_sessions, key=key, old_password=old_password
+	)
+	if frappe.session.user != "Guest" and (profile := get_incomplete_profile(frappe.session.user)):
+		return profile_url(profile)
+	return redirect
 
 
 def user_validate(doc, method=None):

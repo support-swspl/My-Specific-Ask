@@ -280,5 +280,13 @@ doc_events = {
 # ignore_translatable_strings_from = []
 
 
-on_login = "my_specific_ask.access.send_login_welcome"
+on_login = [
+	"my_specific_ask.access.send_login_welcome",
+	"my_specific_ask.access.send_to_incomplete_profile",
+]
+
+# Set-password page: land members with an unfinished profile on it instead of /desk
+override_whitelisted_methods = {
+	"frappe.core.doctype.user.user.update_password": "my_specific_ask.access.update_password",
+}
 boot_session = "my_specific_ask.access.boot_session"
