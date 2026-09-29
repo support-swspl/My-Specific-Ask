@@ -91,6 +91,10 @@ def grant_link_select():
 	for doctype in LINKED_DOCTYPES:
 		if not frappe.db.exists("Custom DocPerm", {"parent": doctype, "role": MEMBER_ROLE, "permlevel": 0}):
 			add_permission(doctype, MEMBER_ROLE, 0, "select")
+		# Custom DocPerm defaults read/export to 1, which would let members open and export the list
+		for name in frappe.get_all("Custom DocPerm", filters={"parent": doctype, "role": MEMBER_ROLE}, pluck="name"):
+			frappe.db.set_value("Custom DocPerm", name, {"read": 0, "export": 0, "select": 1})
+		frappe.clear_cache(doctype=doctype)
 
 
 def ensure_workspace():
@@ -295,6 +299,12 @@ def ensure_member_profile(doc, method=None):
 
 def user_validate(doc, method=None):
 	"""User validate hook: member logins always carry the member module profile and workspace."""
+	# Self sign-up inserts the user with a random password, then saves again to add the role;
+	# Frappe re-applies that password on the second save and mails a "password changed" alert.
+	# Only sign-up saves an existing User as Guest, so drop the stale password there.
+	if frappe.session.user == "Guest" and not doc.is_new():
+		doc._User__new_password = None
+
 	roles = {r.role for r in doc.roles}
 	if doc.name == MANAGER or MEMBER_ROLE not in roles or ADMIN_ROLE in roles:
 		return
