@@ -27,6 +27,7 @@ app_license = "mit"
 # include js, css files in header of desk.html
 # app_include_css = "/assets/my_specific_ask/css/my_specific_ask.css"
 # app_include_js = "/assets/my_specific_ask/js/my_specific_ask.js"
+app_include_js = "/assets/my_specific_ask/js/complete_profile.js"
 
 # include js, css files in header of web template
 # web_include_css = "/assets/my_specific_ask/css/my_specific_ask.css"
@@ -87,6 +88,7 @@ app_license = "mit"
 
 # before_install = "my_specific_ask.install.before_install"
 # after_install = "my_specific_ask.install.after_install"
+after_install = "my_specific_ask.access.setup"
 
 # Uninstallation
 # ------------
@@ -149,6 +151,9 @@ doc_events = {
 	"User": {
 		"validate": "my_specific_ask.access.user_validate",
 		"on_update": "my_specific_ask.access.ensure_member_profile",
+	},
+	"Members": {
+		"on_update": "my_specific_ask.access.refresh_member_boot",
 	},
 }
 
@@ -276,3 +281,4 @@ doc_events = {
 
 
 on_login = "my_specific_ask.access.send_login_welcome"
+boot_session = "my_specific_ask.access.boot_session"

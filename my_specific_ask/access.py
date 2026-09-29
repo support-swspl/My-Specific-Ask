@@ -297,6 +297,28 @@ def ensure_member_profile(doc, method=None):
 	member.insert(ignore_permissions=True)
 
 
+def get_incomplete_profile(user):
+	"""Name of the member's own Members profile while it still misses required fields, else None."""
+	roles = frappe.get_roles(user)
+	if user in (MANAGER, "Administrator") or ADMIN_ROLE in roles or MEMBER_ROLE not in roles:
+		return None
+	profile = frappe.db.get_value("Members", {"user": user}, "name")
+	if profile and frappe.get_doc("Members", profile)._get_missing_mandatory_fields():
+		return profile
+	return None
+
+
+def boot_session(bootinfo):
+	"""boot_session hook: tells complete_profile.js which profile the member must finish first."""
+	bootinfo.msa_incomplete_profile = get_incomplete_profile(frappe.session.user)
+
+
+def refresh_member_boot(doc, method=None):
+	"""Members on_update: drop the member's cached boot so the redirect stops once the profile is saved."""
+	if doc.user:
+		frappe.cache.hdel("bootinfo", doc.user)
+
+
 def user_validate(doc, method=None):
 	"""User validate hook: member logins always carry the member module profile and workspace."""
 	# Self sign-up inserts the user with a random password, then saves again to add the role;
