@@ -145,7 +145,10 @@ has_permission = {
 	"Members": "my_specific_ask.my_specific_ask.doctype.members.members.has_permission",
 }
 
-after_migrate = ["my_specific_ask.access.setup"]
+after_migrate = [
+	"my_specific_ask.access.setup",
+	"my_specific_ask.my_specific_ask.doctype.members.members.setup_one_to_one",
+]
 
 doc_events = {
 	"User": {

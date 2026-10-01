@@ -354,6 +354,18 @@ frappe.msa_whatsapp_one_to_one = (button) => {
 """
 
 
+def setup_one_to_one():
+	"""after_migrate hook: every deploy applies the database side of 1-2-1 requests, so sites
+	without bench access (Frappe Cloud) get it too. A failure is logged, not raised: it must
+	not fail the migrate and with it the deploy."""
+	try:
+		add_one_to_one_to_reports()
+	except Exception:
+		frappe.db.rollback()
+		frappe.log_error(title="My Specific Ask: 1-2-1 setup failed")
+		frappe.db.commit()
+
+
 def add_one_to_one_to_reports():
 	"""Set up 1-2-1 requests on a site: the Actions column of the Search Gives / Search Asks
 	reports, the "My To Do" menu item, the ToDo "Completed" status and the email footer.
