@@ -1,7 +1,7 @@
 {
  "app": "my_specific_ask",
  "charts": [],
- "content": "[{\"data\": {\"col\": 12, \"text\": \"<span class=\\\"h4\\\"><b>My Specific Ask</b></span>\"}, \"id\": \"msa_header\", \"type\": \"header\"}, {\"data\": {\"col\": 3, \"shortcut_name\": \"Members\"}, \"id\": \"msa_members\", \"type\": \"shortcut\"}, {\"id\": \"msa_search_gives\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Search Gives\", \"col\": 3}}, {\"id\": \"msa_search_asks\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Search Asks\", \"col\": 3}}]",
+ "content": "[\n {\n  \"data\": {\n   \"col\": 12,\n   \"text\": \"<span class=\\\"h3\\\"><b>Welcome to My Specific Ask Desk</b></span>\"\n  },\n  \"id\": \"msa_header\",\n  \"type\": \"header\"\n },\n {\n  \"data\": {\n   \"col\": 12,\n   \"text\": \"Please add your details and keep your member details updated. Update your Asks and Gives regularly to get maximum returns.\"\n  },\n  \"id\": \"msa_welcome\",\n  \"type\": \"paragraph\"\n },\n {\n  \"data\": {\n   \"col\": 12,\n   \"text\": \"<span class=\\\"h5\\\"><b>Overview</b></span>\"\n  },\n  \"id\": \"msa_totals\",\n  \"type\": \"header\"\n },\n {\n  \"data\": {\n   \"col\": 4,\n   \"number_card_name\": \"Total Members\"\n  },\n  \"id\": \"msa_card_total_members\",\n  \"type\": \"number_card\"\n },\n {\n  \"data\": {\n   \"col\": 4,\n   \"number_card_name\": \"Total Gives\"\n  },\n  \"id\": \"msa_card_total_gives\",\n  \"type\": \"number_card\"\n },\n {\n  \"data\": {\n   \"col\": 4,\n   \"number_card_name\": \"Total Asks\"\n  },\n  \"id\": \"msa_card_total_asks\",\n  \"type\": \"number_card\"\n },\n {\n  \"data\": {\n   \"col\": 12\n  },\n  \"id\": \"msa_spacer\",\n  \"type\": \"spacer\"\n },\n {\n  \"data\": {\n   \"col\": 12,\n   \"text\": \"<span class=\\\"h5\\\"><b>Shortcuts</b></span>\"\n  },\n  \"id\": \"msa_shortcuts\",\n  \"type\": \"header\"\n },\n {\n  \"data\": {\n   \"col\": 3,\n   \"shortcut_name\": \"Members\"\n  },\n  \"id\": \"msa_members\",\n  \"type\": \"shortcut\"\n },\n {\n  \"data\": {\n   \"col\": 3,\n   \"shortcut_name\": \"Search Gives\"\n  },\n  \"id\": \"msa_search_gives\",\n  \"type\": \"shortcut\"\n },\n {\n  \"data\": {\n   \"col\": 3,\n   \"shortcut_name\": \"Search Asks\"\n  },\n  \"id\": \"msa_search_asks\",\n  \"type\": \"shortcut\"\n },\n {\n  \"data\": {\n   \"col\": 3,\n   \"shortcut_name\": \"My To Do\"\n  },\n  \"id\": \"msa_my_to_do\",\n  \"type\": \"shortcut\"\n }\n]",
  "creation": "2026-09-29 10:34:17.949972",
  "custom_blocks": [],
  "docstatus": 0,
@@ -14,11 +14,24 @@
  "label": "My Specific Ask",
  "link_type": "DocType",
  "links": [],
- "modified": "2026-09-29 14:31:38.556609",
- "modified_by": "milind@swspl.com",
+ "modified": "2026-10-01 16:02:16.009909",
+ "modified_by": "Administrator",
  "module": "My Specific Ask",
  "name": "My Specific Ask",
- "number_cards": [],
+ "number_cards": [
+  {
+   "label": "Total Members",
+   "number_card_name": "Total Members"
+  },
+  {
+   "label": "Total Gives",
+   "number_card_name": "Total Gives"
+  },
+  {
+   "label": "Total Asks",
+   "number_card_name": "Total Asks"
+  }
+ ],
  "owner": "Administrator",
  "public": 1,
  "quick_lists": [],
@@ -51,6 +64,12 @@
    "link_to": "Search Asks",
    "report_ref_doctype": "Members",
    "type": "Report"
+  },
+  {
+   "doc_view": "List",
+   "label": "My To Do",
+   "link_to": "ToDo",
+   "type": "DocType"
   }
  ],
  "title": "My Specific Ask",

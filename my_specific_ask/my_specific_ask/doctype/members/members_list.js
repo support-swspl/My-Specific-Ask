@@ -4,6 +4,37 @@
 // Members list: "Search Asks" / "Search Gives" boxes. A member stays in the list when any
 // row of that table contains the text in any of its columns; both boxes must match if both are filled.
 frappe.listview_settings["Members"] = {
+	add_fields: ["user", "full_name"],
+
+	// "Request 1-2-1" on every row but your own: emails that member and adds a ToDo for you
+	button: {
+		show(doc) {
+			return doc.user !== frappe.session.user;
+		},
+		get_label() {
+			const mail_icon = frappe.utils.icon("mail", "xs", "", "margin-right: 4px;");
+			return mail_icon + __("Request 1-2-1");
+		},
+		get_description(doc) {
+			return __("Email {0} a 1-2-1 request and add it to your ToDo list", [frappe.utils.escape_html(doc.full_name)]);
+		},
+		action(doc) {
+			frappe.confirm(__("Send a 1-2-1 request to {0}?", [frappe.utils.escape_html(doc.full_name).bold()]), () => {
+				frappe.call({
+					method: "my_specific_ask.my_specific_ask.doctype.members.members.request_one_to_one",
+					args: { member: doc.name },
+					freeze: true,
+					freeze_message: __("Sending request..."),
+					callback: () =>
+						frappe.show_alert({
+							message: __("1-2-1 request emailed and added to your <a href='/desk/todo'>ToDo list</a>."),
+							indicator: "green",
+						}),
+				});
+			});
+		},
+	},
+
 	onload(listview) {
 		const tables = {
 			ask: {
