@@ -331,6 +331,20 @@ def send_to_incomplete_profile(login_manager):
 		frappe.cache.hset("home_page", login_manager.user, profile_url(profile).lstrip("/"))
 
 
+@frappe.whitelist()
+def get_link_title(doctype: str, docname: str | int):
+	"""Frappe's get_link_title, which shows a Link value by its title (e.g. in a list filter),
+	wants read access. Members may only pick from LINKED_DOCTYPES, so a filter on Network or
+	Power Team in the Members list raised "Not permitted": for those, select access is enough."""
+	if doctype in LINKED_DOCTYPES and frappe.has_permission(doctype, "select"):
+		title_field = frappe.get_meta(doctype).title_field
+		return (title_field and frappe.db.get_value(doctype, docname, title_field)) or docname
+
+	from frappe.desk.search import get_link_title as frappe_get_link_title
+
+	return frappe_get_link_title(doctype, docname)
+
+
 @frappe.whitelist(allow_guest=True, methods=["POST"])
 def update_password(
 	new_password: str, logout_all_sessions: int = 0, key: str | None = None, old_password: str | None = None

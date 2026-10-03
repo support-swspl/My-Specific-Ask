@@ -292,7 +292,9 @@ on_login = [
 ]
 
 # Set-password page: land members with an unfinished profile on it instead of /desk
+# Link titles: members can see the name of a Network / Power Team they may only pick
 override_whitelisted_methods = {
 	"frappe.core.doctype.user.user.update_password": "my_specific_ask.access.update_password",
+	"frappe.desk.search.get_link_title": "my_specific_ask.access.get_link_title",
 }
 boot_session = "my_specific_ask.access.boot_session"
