@@ -45,6 +45,25 @@ class Members(Document):
 		if not self.is_new() and not is_admin() and self.has_value_changed("user"):
 			frappe.throw(_("Only a System Manager can change the linked User."))
 
+		# Region is always kept in capitals, so the same region is written one way
+		if self.region:
+			self.region = self.region.strip().upper()
+
+		# Shown in the "Gives / Asks" column of the Members list as G-n, A-n
+		self.gives_count = len(self.members_gives)
+		self.asks_count = len(self.members_ask)
+
+
+def set_give_ask_counts():
+	"""Patch: fill gives_count / asks_count on members saved before those fields existed."""
+	for field, child in (("gives_count", "Members Give"), ("asks_count", "Members Ask")):
+		frappe.db.sql(
+			f"""update `tabMembers` set {field} = (
+				select count(*) from `tab{child}` c
+				where c.parent = `tabMembers`.name and c.parenttype = 'Members'
+			)"""
+		)
+
 
 def is_admin(user=None):
 	return "System Manager" in frappe.get_roles(user)
@@ -187,6 +206,56 @@ def get_total_asks(filters=None):
 	"""Number card on the home page: Asks across all members."""
 	frappe.has_permission("Members", throw=True)
 	return {"value": frappe.db.count("Members Ask", {"parenttype": "Members"}), "fieldtype": "Int"}
+
+
+@frappe.whitelist()
+def get_ask_give_breakdown(table: str):
+	"""Asks / Gives dashboards: the rows of all members' Asks ("Members Ask") or Gives
+	("Members Give") counted per industry and per classification, most first.
+	"members" is how many different members have such a row."""
+	if table not in ("Members Ask", "Members Give"):
+		frappe.throw(_("Unknown table {0}").format(table))
+	frappe.has_permission("Members", throw=True)
+
+	rows = frappe.get_all(
+		table, filters={"parenttype": "Members"}, fields=["parent", "industry", "classification"]
+	)
+	breakdown = {}
+	for field in ("industry", "classification"):
+		groups = {}
+		for row in rows:
+			value = (row.get(field) or "").strip()
+			if not value:
+				continue
+			# "IT" and "it" are one line, shown as first written
+			group = groups.setdefault(value.casefold(), {"value": value, "rows": 0, "members": set()})
+			group["rows"] += 1
+			group["members"].add(row.parent)
+		breakdown[field] = sorted(
+			({"value": g["value"], "rows": g["rows"], "members": len(g["members"])} for g in groups.values()),
+			key=lambda g: (-g["rows"], g["value"].casefold()),
+		)
+	return breakdown
+
+
+@frappe.whitelist()
+@frappe.validate_and_sanitize_search_inputs
+def power_team_query(doctype, txt, searchfield, start, page_len, filters, **kwargs):
+	"""Power Team dropdown on the Members form: every team with its description, found by
+	typing part of the team's name or of its description."""
+	frappe.has_permission("Power Team", "select", throw=True)
+	or_filters = None
+	if txt:
+		or_filters = [[field, "like", f"%{txt}%"] for field in ("name", "power_team_name", "description")]
+	return frappe.get_all(
+		"Power Team",
+		fields=["name", "power_team_name", "description"],
+		or_filters=or_filters,
+		order_by="power_team_name",
+		start=start,
+		page_length=page_len,
+		as_list=True,
+	)
 
 
 def count_gives(me):
@@ -396,6 +465,34 @@ def add_one_to_one_to_reports():
 			})
 			sidebar.save(ignore_permissions=True)
 			updated.append("My To Do menu")
+		# "Power Teams" in the menu: the Power Team Dashboard page
+		if frappe.db.exists("Page", "power-team-dashboard") and not any(
+			item.link_to == "power-team-dashboard" for item in sidebar.items
+		):
+			sidebar.append("items", {
+				"label": "Power Teams", "type": "Link", "link_type": "Page",
+				"link_to": "power-team-dashboard", "icon": "chart-pie",
+			})
+			sidebar.save(ignore_permissions=True)
+			updated.append("Power Teams menu")
+		# "Asks Dashboard" and "Gives Dashboard" in the menu, right under Members
+		for label, page, after in (
+			("Asks Dashboard", "asks-dashboard", "Members"),
+			("Gives Dashboard", "gives-dashboard", "asks-dashboard"),
+		):
+			if not frappe.db.exists("Page", page) or any(item.link_to == page for item in sidebar.items):
+				continue
+			sidebar.append("items", {
+				"label": label, "type": "Link", "link_type": "Page", "link_to": page, "icon": "chart-pie",
+			})
+			# append() puts it last: move it to just after the `after` item
+			item = sidebar.items.pop()
+			at = next((i + 1 for i, other in enumerate(sidebar.items) if other.link_to == after), len(sidebar.items))
+			sidebar.items.insert(at, item)
+			for idx, other in enumerate(sidebar.items, start=1):
+				other.idx = idx
+			sidebar.save(ignore_permissions=True)
+			updated.append(f"{label} menu")
 		frappe.cache.delete_key("bootinfo")
 
 	# ToDo status gets a "Completed" choice for 1-2-1s that are done

@@ -1,0 +1,4 @@
+/* Outgoing emails: no "Frappe" name / logo row above the message */
+.email-masthead {
+	display: none;
+}

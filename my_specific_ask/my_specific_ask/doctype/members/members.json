@@ -39,7 +39,9 @@
   "section_break_nvev",
   "members_gives",
   "section_break_ivxj",
-  "members_ask"
+  "members_ask",
+  "gives_count",
+  "asks_count"
  ],
  "fields": [
   {
@@ -228,12 +230,32 @@
    "fieldtype": "Table",
    "label": "Members Ask",
    "options": "Members Ask"
+  },
+  {
+   "default": "0",
+   "description": "Number of rows in Members Give's, set on save. Shown beside the name in the Members list.",
+   "fieldname": "gives_count",
+   "fieldtype": "Int",
+   "hidden": 1,
+   "label": "Gives Count",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "description": "Number of rows in Members Ask, set on save. Shown beside the name in the Members list.",
+   "fieldname": "asks_count",
+   "fieldtype": "Int",
+   "hidden": 1,
+   "label": "Asks Count",
+   "no_copy": 1,
+   "read_only": 1
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-09-29 13:12:11.290755",
+ "modified": "2026-10-03 12:00:00.000000",
  "modified_by": "Administrator",
  "module": "My Specific Ask",
  "name": "Members",
