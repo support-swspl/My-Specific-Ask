@@ -59,17 +59,9 @@ frappe.ui.form.on("Members", {
 		}
 
 		// Congratulations with falling sprinkles when this save reached a badge (first at 6 Gives).
-		// Same levels as the badges in members_list.js.
-		const badges = [
-			{ min: 25, label: __("Platinum") },
-			{ min: 19, label: __("Gold") },
-			{ min: 13, label: __("Silver") },
-			{ min: 6, label: __("Bronze") },
-		];
-		const badge_for = (gives) => badges.find((badge) => gives >= badge.min);
-		const gives = frm.doc.gives_count || 0;
-		const before = badge_for(frm.msa_gives_before || 0);
-		const now = badge_for(gives);
+		// The badges are in public/js/msa_desk.js.
+		const before = frappe.msa_badge_for(frm.msa_gives_before || 0);
+		const now = frappe.msa_badge_for(frm.doc.gives_count || 0);
 		if (now && (!before || now.min > before.min)) {
 			frappe.msa_sprinkles();
 			frappe.msgprint({

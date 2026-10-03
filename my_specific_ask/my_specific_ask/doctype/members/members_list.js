@@ -71,44 +71,14 @@ frappe.listview_settings["Members"] = {
 		listview.setup_columns();
 		listview.render_header(true);
 
-		// Badge after the name for the Gives a member has listed; highest level first.
-		// Fewer than 6 Gives: no badge.
-		const badges = [
-			{ min: 25, label: __("Platinum"), rim: "#d3e3ee", face: "#5f86a3" },
-			{ min: 19, label: __("Gold"), rim: "#ffd98a", face: "#f59e0b" },
-			{ min: 13, label: __("Silver"), rim: "#e1e4e8", face: "#8d96a3" },
-			{ min: 6, label: __("Bronze"), rim: "#e6bd95", face: "#b4682a" },
-		];
-		// Rosette with a tick: ribbons, a scalloped rim (8 small circles round a big one), the face
-		const rim_circles = [0, 1, 2, 3, 4, 5, 6, 7]
-			.map((i) => {
-				const angle = (i * Math.PI) / 4;
-				return `<circle cx="${(12 + 6.6 * Math.cos(angle)).toFixed(2)}" cy="${(9.5 + 6.6 * Math.sin(angle)).toFixed(2)}" r="2.4"/>`;
-			})
-			.join("");
-		const badge_html = (gives) => {
-			const badge = badges.find((b) => gives >= b.min);
-			if (!badge) return "";
-			// Shown when the mouse is over the badge
-			const tip = __("{0} badge - {1} Gives", [badge.label, gives]);
-			return `<span class="msa-gives-badge" title="${tip}" style="display: inline-flex; flex-shrink: 0; margin-left: 10px; vertical-align: middle;">
-				<svg viewBox="0 0 24 24" width="20" height="20" role="img" aria-label="${tip}">
-					<path d="M8.2 13 5 22.5l3.4-1.2 1.9 2.7 2.4-8z" fill="#ff4d4f"/>
-					<path d="M15.8 13 19 22.5l-3.4-1.2-1.9 2.7-2.4-8z" fill="#e8383b"/>
-					<g fill="${badge.rim}"><circle cx="12" cy="9.5" r="7"/>${rim_circles}</g>
-					<circle cx="12" cy="9.5" r="5" fill="${badge.face}"/>
-					<path d="M9.5 9.6l1.8 1.8 3.3-3.5" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-				</svg>
-			</span>`;
-		};
-
+		// Badge after the name for the Gives a member has listed (badges: public/js/msa_desk.js).
 		// The name column's formatter can only return text, so the badge goes into the
 		// element the list builds for that column, just after the name.
 		const get_subject_element = listview.get_subject_element.bind(listview);
 		listview.get_subject_element = (doc, title) => {
 			const element = get_subject_element(doc, title);
 			const link = element.querySelector("a");
-			if (link) link.insertAdjacentHTML("afterend",badge_html(doc.gives_count || 0));
+			if (link) link.insertAdjacentHTML("afterend", frappe.msa_badge_html(doc.gives_count || 0));
 			return element;
 		};
 

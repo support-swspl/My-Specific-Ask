@@ -27,7 +27,7 @@ app_license = "mit"
 # include js, css files in header of desk.html
 app_include_css = "/assets/my_specific_ask/css/my_specific_ask.css"
 # app_include_js = "/assets/my_specific_ask/js/my_specific_ask.js"
-app_include_js = "/assets/my_specific_ask/js/complete_profile.js"
+app_include_js = ["/assets/my_specific_ask/js/complete_profile.js", "/assets/my_specific_ask/js/msa_desk.js"]
 
 # styles added to every outgoing email, after Frappe's own
 email_css = ["/assets/my_specific_ask/css/email.css"]

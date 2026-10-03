@@ -545,13 +545,60 @@ HOME_SHORTCUTS = [
 	{"label": "Search Gives", "type": "Report", "link_to": "Search Gives", "report_ref_doctype": "Members"},
 	{"label": "Search Asks", "type": "Report", "link_to": "Search Asks", "report_ref_doctype": "Members"},
 	{"label": "My To Do", "type": "DocType", "link_to": "ToDo", "doc_view": "List"},
+	{"label": "Asks Dashboard", "type": "Page", "link_to": "asks-dashboard"},
+	{"label": "Gives Dashboard", "type": "Page", "link_to": "gives-dashboard"},
+	{"label": "Power Teams", "type": "Page", "link_to": "power-team-dashboard"},
 ]
 
 
+# Custom HTML Blocks on the home page: name -> the function in public/js/msa_desk.js that fills it
+HOME_BLOCKS = {
+	"Your Progress": "frappe.msa_my_progress",
+	"Top Givers": "frappe.msa_top_givers",
+}
+
+
+@frappe.whitelist()
+def get_my_progress():
+	"""Home page "Your Progress": the logged-in member's profile and number of Gives.
+	None for a login without a member profile."""
+	return frappe.db.get_value("Members", {"user": frappe.session.user}, ["name", "gives_count"], as_dict=True)
+
+
+@frappe.whitelist()
+def get_top_givers():
+	"""Home page "Top Givers": the 5 members with the most Gives, most first."""
+	frappe.has_permission("Members", throw=True)
+	return frappe.get_all(
+		"Members",
+		filters={"gives_count": [">", 0]},
+		fields=["name", "full_name", "company_name", "gives_count"],
+		order_by="gives_count desc, full_name asc",
+		limit=5,
+	)
+
+
 def setup_home_page():
-	"""My Specific Ask workspace: welcome text, the three totals and the shortcuts."""
+	"""My Specific Ask workspace: welcome text, the member's progress, the three totals,
+	the shortcuts and Top Givers."""
 	if not frappe.db.exists("Workspace", "My Specific Ask"):
 		return
+
+	for name, function in HOME_BLOCKS.items():
+		if frappe.db.exists("Custom HTML Block", name):
+			block = frappe.get_doc("Custom HTML Block", name)
+		else:
+			block = frappe.new_doc("Custom HTML Block")
+			block.name = name
+		block.update({
+			"html": '<div class="msa-block"></div>',
+			"script": f'{function}(root_element.querySelector(".msa-block"));',
+			"private": 0,
+		})
+		block.save(ignore_permissions=True)
+
+	def custom_block(name):
+		return {"id": "msa_" + frappe.scrub(name), "type": "custom_block", "data": {"custom_block_name": name, "col": 12}}
 
 	cards = []
 	for label, fields in HOME_CARDS.items():
@@ -568,7 +615,10 @@ def setup_home_page():
 		card.save(ignore_permissions=True)
 		cards.append({"number_card_name": card.name, "label": label})
 
-	shortcuts = [s for s in HOME_SHORTCUTS if s["type"] != "Report" or frappe.db.exists("Report", s["link_to"])]
+	# Reports live in the database and pages come with a deploy: leave out what this site does not have
+	shortcuts = [
+		s for s in HOME_SHORTCUTS if s["type"] == "DocType" or frappe.db.exists(s["type"], s["link_to"])
+	]
 
 	def heading(block_id, text, size):
 		return {"id": block_id, "type": "header", "data": {"text": f'<span class="{size}"><b>{text}</b></span>', "col": 12}}
@@ -576,6 +626,8 @@ def setup_home_page():
 	content = [
 		heading("msa_header", HOME_WELCOME, "h3"),
 		{"id": "msa_welcome", "type": "paragraph", "data": {"text": HOME_TEXT, "col": 12}},
+		heading("msa_progress_title", "Your Progress", "h5"),
+		custom_block("Your Progress"),
 		heading("msa_totals", "Overview", "h5"),
 		*[
 			{"id": "msa_card_" + frappe.scrub(c["label"]), "type": "number_card", "data": {"number_card_name": c["label"], "col": 4}}
@@ -587,11 +639,15 @@ def setup_home_page():
 			{"id": "msa_" + frappe.scrub(s["label"]), "type": "shortcut", "data": {"shortcut_name": s["label"], "col": 3}}
 			for s in shortcuts
 		],
+		{"id": "msa_spacer_2", "type": "spacer", "data": {"col": 12}},
+		heading("msa_top_givers_title", "Top Givers", "h5"),
+		custom_block("Top Givers"),
 	]
 
 	workspace = frappe.get_doc("Workspace", "My Specific Ask")
 	workspace.set("number_cards", cards)
 	workspace.set("shortcuts", shortcuts)
+	workspace.set("custom_blocks", [{"custom_block_name": name, "label": name} for name in HOME_BLOCKS])
 	workspace.content = frappe.as_json(content)
 	workspace.save(ignore_permissions=True)
 
