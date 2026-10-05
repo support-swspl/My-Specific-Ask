@@ -560,9 +560,11 @@ HOME_BLOCKS = {
 
 @frappe.whitelist()
 def get_my_progress():
-	"""Home page "Your Progress": the logged-in member's profile and number of Gives.
+	"""Home page "Your Progress": the logged-in member's profile, name and number of Gives.
 	None for a login without a member profile."""
-	return frappe.db.get_value("Members", {"user": frappe.session.user}, ["name", "gives_count"], as_dict=True)
+	return frappe.db.get_value(
+		"Members", {"user": frappe.session.user}, ["name", "full_name", "gives_count"], as_dict=True
+	)
 
 
 @frappe.whitelist()

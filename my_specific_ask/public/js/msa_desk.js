@@ -38,7 +38,7 @@ frappe.msa_badge_html = (gives, size = 20) => {
 };
 
 // Home page "Your Progress" (a Custom HTML Block set up by setup_home_page in members.py):
-// the logged-in member's Gives, their badge and how many more Gives the next badge needs.
+// the logged-in member's name, Gives, their badge and how many more Gives the next badge needs.
 frappe.msa_my_progress = async function (element) {
 	const r = await frappe.call("my_specific_ask.my_specific_ask.doctype.members.members.get_my_progress");
 	const me = r.message;
@@ -48,6 +48,8 @@ frappe.msa_my_progress = async function (element) {
 		return;
 	}
 
+	// The login's own name until the member has filled in theirs
+	const full_name = frappe.utils.escape_html(me.full_name || frappe.session.user_fullname || "");
 	const gives = me.gives_count || 0;
 	const badge = frappe.msa_badge_for(gives);
 	// The next badge up: the lowest one that needs more Gives than the member has
@@ -63,10 +65,11 @@ frappe.msa_my_progress = async function (element) {
 		: __("You have reached the highest badge.");
 
 	element.innerHTML = `
-		<div style="display: flex; align-items: center; gap: 16px; padding: 16px; background: var(--card-bg);
+		<div style="display: flex; flex-wrap: wrap; align-items: center; gap: 16px; padding: 16px; background: var(--card-bg);
 			border: 1px solid var(--border-color); border-radius: var(--border-radius-md);">
 			${badge ? `<span style="margin-left: -10px;">${frappe.msa_badge_html(gives, 44)}</span>` : ""}
-			<div style="flex: 1; min-width: 0;">
+			<div style="flex: 1; min-width: 200px;">
+				<div style="font-size: var(--text-lg); font-weight: 600; margin-bottom: 4px;">${full_name}</div>
 				<div><b>${have}</b> ${to_go}</div>
 				<div style="height: 8px; margin-top: 10px; background: var(--gray-200); border-radius: 4px; overflow: hidden;"
 					role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${percent}">
@@ -76,11 +79,11 @@ frappe.msa_my_progress = async function (element) {
 					${next ? __("{0} of {1} Gives", [gives, next.min]) : __("{0} Gives", [gives])}
 				</div>
 			</div>
-			<button class="btn btn-default btn-sm msa-add-gives">${__("Add Gives")}</button>
+			<button class="btn btn-primary btn-sm msa-my-profile">${__("My Profile")}</button>
 		</div>`;
 
 	// Their own profile, where the Gives are added
-	element.querySelector(".msa-add-gives").addEventListener("click", () => {
+	element.querySelector(".msa-my-profile").addEventListener("click", () => {
 		frappe.set_route("Form", "Members", me.name);
 	});
 };
