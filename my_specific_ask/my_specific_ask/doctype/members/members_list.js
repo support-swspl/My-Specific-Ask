@@ -4,7 +4,7 @@
 // Members list: "Search Asks" / "Search Gives" boxes. A member stays in the list when any
 // row of that table contains the text in any of its columns; both boxes must match if both are filled.
 frappe.listview_settings["Members"] = {
-	add_fields: ["user", "full_name", "gives_count", "asks_count", "power_team"],
+	add_fields: ["user", "full_name", "gives_count", "asks_count", "power_team", "manually_verified"],
 
 	// "Gives / Asks" column (added in onload): "G-5, A-3" - how many Gives and Asks the member has listed
 	formatters: {
@@ -71,24 +71,30 @@ frappe.listview_settings["Members"] = {
 		listview.setup_columns();
 		listview.render_header(true);
 
-		// Badge after the name for the Gives a member has listed (badges: public/js/msa_desk.js).
-		// The name column's formatter can only return text, so the badge goes into the
+		// After the name: the blue tick of a member an administrator has verified, then the badge
+		// for the Gives a member has listed (both: public/js/msa_desk.js).
+		// The name column's formatter can only return text, so they go into the
 		// element the list builds for that column, just after the name.
 		const get_subject_element = listview.get_subject_element.bind(listview);
 		listview.get_subject_element = (doc, title) => {
 			const element = get_subject_element(doc, title);
 			const link = element.querySelector("a");
-			if (link) link.insertAdjacentHTML("afterend", frappe.msa_badge_html(doc.gives_count || 0));
+			if (link) {
+				link.insertAdjacentHTML(
+					"afterend",
+					frappe.msa_verified_html(doc.manually_verified) + frappe.msa_badge_html(doc.gives_count || 0)
+				);
+			}
 			return element;
 		};
 
-		// The list sizes the name column from the name's text alone, which cuts the badge off:
-		// widen it by the badge and a gap before the next column.
+		// The list sizes the name column from the name's text alone, which cuts the tick and badge off:
+		// widen it by both and a gap before the next column.
 		const apply_column_widths = listview.apply_column_widths.bind(listview);
 		listview.apply_column_widths = () => {
 			apply_column_widths();
 			if (listview.list_view_settings?.disable_scrolling || !listview.column_max_widths.full_name) return;
-			const width = listview.column_max_widths.full_name + 50;
+			const width = listview.column_max_widths.full_name + 72;
 			listview.$result
 				.find('.level-left .list-row-col[data-fieldname="full_name"]')
 				.css({ width: width, flex: `1 0 ${width}px` });

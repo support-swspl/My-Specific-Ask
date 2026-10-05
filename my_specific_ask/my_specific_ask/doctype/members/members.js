@@ -38,8 +38,27 @@ frappe.ui.form.on("Members", {
 				});
 		}
 
+		// [2026-10-05] Profile URL verification (the checks are in profile_verification.py)
+		// Whether an administrator is looking at the form
+		const is_admin = frappe.user.has_role("System Manager");
+		// The two ticks and the remarks are in a section only administrators see (set in the doctype).
+		// Once an administrator has verified the Profile URL, the member can no longer change it;
+		// the server refuses it too
+		frm.set_df_property("profile_url", "read_only", !is_admin && frm.doc.manually_verified ? 1 : 0);
+		// The title area at the top of the form
+		const $title = frm.page.$title_area.find(".title-text");
+		// Take away a tick put there by an earlier refresh
+		$title.find(".msa-verified").remove();
+		// Blue tick after the member's name once an administrator has verified them (public/js/msa_desk.js)
+		$title.append(frappe.msa_verified_html(frm.doc.manually_verified, 18));
+		// A saved profile with a Profile URL, seen by an administrator:
+		if (!frm.is_new() && frm.doc.profile_url && is_admin) {
+			// a button to run the System check again, e.g. after the name or mobile number was corrected
+			frm.add_custom_button(__("Verify Profile URL"), () => frappe.msa_verify_profile_url(frm));
+		}
+
 		// New (unsaved) forms and System Managers need none of the rules below
-		if (frm.is_new() || frappe.user.has_role("System Manager")) return;
+		if (frm.is_new() || is_admin) return;
 
 		// The member is looking at their own profile:
 		if (frm.doc.user === frappe.session.user) {
@@ -89,6 +108,9 @@ frappe.ui.form.on("Members", {
 			frm.set_intro("");
 		}
 
+		// [2026-10-05] A new or changed Profile URL has no remarks yet (the server clears them): check it now
+		if (frm.doc.profile_url && !frm.doc.verification_remarks) frappe.msa_verify_profile_url(frm);
+
 		// Congratulations with falling sprinkles when this save reached a badge (first at 6 Gives).
 		// The badges are in public/js/msa_desk.js.
 		// [2026-10-03] The badge the member had before this save
@@ -111,6 +133,48 @@ frappe.ui.form.on("Members", {
 		}
 	},
 });
+
+// [2026-10-05] Runs the System check of the member's Profile URL. An administrator sees the result
+// in a pop-up; for a member it runs unseen after their save.
+frappe.msa_verify_profile_url = function (frm) {
+	// Whether an administrator is looking at the form
+	const is_admin = frappe.user.has_role("System Manager");
+	// Unsaved changes would be lost by the reload below, and the checks use what is saved
+	if (frm.is_dirty()) {
+		// Say so and stop
+		frappe.show_alert({ message: __("Please save the profile first."), indicator: "orange" });
+		return;
+	}
+	// Ask the server to read the page and compare it with the profile
+	frappe.call({
+		// The server function that does both checks
+		method: "my_specific_ask.profile_verification.verify_now",
+		// Which member to check
+		args: { member: frm.doc.name },
+		// For an administrator, grey out the screen while it runs (it reads a website, which takes some seconds)
+		freeze: is_admin,
+		// The text shown meanwhile
+		freeze_message: __("Checking the Profile URL..."),
+		// When the answer is back:
+		callback: (r) => {
+			// The result: the System tick and the remarks
+			const result = r.message || {};
+			// Only an administrator is told the result
+			if (is_admin) {
+				frappe.msgprint({
+					// The pop-up title
+					title: __("Profile URL check"),
+					// The dot beside the title: green when the check passed, orange otherwise
+					indicator: result.system_verified ? "green" : "orange",
+					// The remarks; they contain text from outside, so it is escaped
+					message: frappe.utils.escape_html(result.verification_remarks || ""),
+				});
+			}
+			// Load the member again so the form has the new tick and remarks
+			frm.reload_doc();
+		},
+	});
+};
 
 // Celebration for a few seconds: confetti shot from both bottom corners and sprinkles falling from the top
 // [2026-10-03] The function that draws the celebration

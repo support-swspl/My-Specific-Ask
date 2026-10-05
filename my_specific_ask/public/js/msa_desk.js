@@ -2,7 +2,7 @@
 // For license information, please see license.txt
 
 // Loaded on every desk page (app_include_js): the Gives badges, shared by the Members list,
-// the member form and the home page, and the home page's "Top Givers" block.
+// the member form and the home page, the blue Verified tick, and the home page's "Top Givers" block.
 
 // Badge for the Gives a member has listed; highest level first. Fewer than 6 Gives: no badge.
 frappe.msa_badges = [
@@ -33,6 +33,19 @@ frappe.msa_badge_html = (gives, size = 20) => {
 			<g fill="${badge.rim}"><circle cx="12" cy="9.5" r="7"/>${rim_circles}</g>
 			<circle cx="12" cy="9.5" r="5" fill="${badge.face}"/>
 			<path d="M9.5 9.6l1.8 1.8 3.3-3.5" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+		</svg>
+	</span>`;
+};
+
+// Blue tick after the name of a member whose Profile URL an administrator has verified
+// (the "Verified by Administrator" tick on the member form)
+frappe.msa_verified_html = (verified, size = 16) => {
+	if (!cint(verified)) return "";
+	const tip = __("Verified member");
+	return `<span class="msa-verified" title="${tip}" style="display: inline-flex; flex-shrink: 0; margin-left: 6px; vertical-align: middle;">
+		<svg viewBox="0 0 24 24" width="${size}" height="${size}" role="img" aria-label="${tip}">
+			<circle cx="12" cy="12" r="11" fill="#1d9bf0"/>
+			<path d="M7 12.4l3.3 3.3L17 8.8" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
 		</svg>
 	</span>`;
 };

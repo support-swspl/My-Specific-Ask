@@ -9,11 +9,15 @@ from frappe import _
 from frappe.model.document import Document
 from frappe.utils import escape_html, get_fullname, get_link_to_form, get_url
 
+from my_specific_ask import profile_verification
+
 MEMBER_ROLE = "Specific Ask Member"
 READ_PTYPES = ("read", "select", "print", "report", "email", "export")
 APP_TITLE = "My Specific Ask"
 # Gives a member must have in their own profile before they can request a 1-2-1
 MIN_GIVES = 5
+# Gives a member must have in their own profile before they can open another member's profile
+MIN_GIVES_TO_VIEW = 6
 
 ONE_TO_ONE_EMAIL_HTML = """<p>Dear {{ target.full_name }},</p>
 
@@ -40,6 +44,24 @@ ONE_TO_ONE_EMAIL_HTML = """<p>Dear {{ target.full_name }},</p>
 
 
 class Members(Document):
+	def onload(self):
+		"""Runs when the member form is opened: a member with fewer than MIN_GIVES_TO_VIEW Gives
+		may open only their own profile. The Members list, the reports and 1-2-1 requests are not affected."""
+		user = frappe.session.user
+		if self.user == user or is_admin(user):
+			return
+		# Logins without a member profile have no Gives to list and are not held to it
+		me = frappe.db.get_value("Members", {"user": user}, ["name", "gives_count"], as_dict=True)
+		if not me or (me.gives_count or 0) >= MIN_GIVES_TO_VIEW:
+			return
+
+		# Shown by the desk in a "Not permitted" pop-up; closing it goes back to the page before
+		frappe.flags.error_message = _(
+			"You need at least {0} Gives in your profile before you can view other members' profiles. "
+			"You have {1} now. Please add more Gives to your own profile and try again."
+		).format(MIN_GIVES_TO_VIEW, me.gives_count or 0)
+		raise frappe.PermissionError
+
 	def validate(self):
 		# Members may edit their own profile but not hand it to another login
 		if not self.is_new() and not is_admin() and self.has_value_changed("user"):
@@ -52,6 +74,9 @@ class Members(Document):
 		# Shown in the "Gives / Asks" column of the Members list as G-n, A-n
 		self.gives_count = len(self.members_gives)
 		self.asks_count = len(self.members_ask)
+
+		# Profile URL: only the checks set its ticks, and a changed link starts unverified
+		profile_verification.validate(self)
 
 
 def set_give_ask_counts():
