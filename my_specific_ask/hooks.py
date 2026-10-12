@@ -25,9 +25,20 @@ app_license = "mit"
 # ------------------
 
 # include js, css files in header of desk.html
-app_include_css = "/assets/my_specific_ask/css/my_specific_ask.css"
+# The server tells browsers to keep /assets files for a year, so a changed file under the same
+# address is never fetched again: an old msa_desk.js then runs beside new doctype scripts.
+# The address carries the file's hash, so it changes whenever the file does.
+def _asset(path):
+	import hashlib
+	import os
+
+	with open(os.path.join(os.path.dirname(__file__), "public", path), "rb") as f:
+		return f"/assets/my_specific_ask/{path}?v={hashlib.md5(f.read()).hexdigest()[:8]}"
+
+
+app_include_css = _asset("css/my_specific_ask.css")
 # app_include_js = "/assets/my_specific_ask/js/my_specific_ask.js"
-app_include_js = ["/assets/my_specific_ask/js/complete_profile.js", "/assets/my_specific_ask/js/msa_desk.js"]
+app_include_js = [_asset("js/complete_profile.js"), _asset("js/msa_desk.js")]
 
 # styles added to every outgoing email, after Frappe's own
 email_css = ["/assets/my_specific_ask/css/email.css"]

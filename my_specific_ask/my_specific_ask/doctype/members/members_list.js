@@ -80,9 +80,11 @@ frappe.listview_settings["Members"] = {
 			const element = get_subject_element(doc, title);
 			const link = element.querySelector("a");
 			if (link) {
+				// "?.": a browser still holding an older msa_desk.js must not lose the whole list
 				link.insertAdjacentHTML(
 					"afterend",
-					frappe.msa_verified_html(doc.manually_verified) + frappe.msa_badge_html(doc.gives_count || 0)
+					(frappe.msa_verified_html?.(doc.manually_verified) || "") +
+						(frappe.msa_badge_html?.(doc.gives_count || 0) || "")
 				);
 			}
 			return element;

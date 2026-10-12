@@ -50,7 +50,8 @@ frappe.ui.form.on("Members", {
 		// Take away a tick put there by an earlier refresh
 		$title.find(".msa-verified").remove();
 		// Blue tick after the member's name once an administrator has verified them (public/js/msa_desk.js)
-		$title.append(frappe.msa_verified_html(frm.doc.manually_verified, 18));
+		// "?.": a browser still holding an older msa_desk.js must not stop the rest of this refresh
+		$title.append(frappe.msa_verified_html?.(frm.doc.manually_verified, 18) || "");
 		// A saved profile with a Profile URL, seen by an administrator:
 		if (!frm.is_new() && frm.doc.profile_url && is_admin) {
 			// a button to run the System check again, e.g. after the name or mobile number was corrected
