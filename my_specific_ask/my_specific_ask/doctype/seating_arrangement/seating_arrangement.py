@@ -48,6 +48,8 @@ class SeatingArrangement(Document):
 	def email_schedules(self):
 		"""Email each seated member their own 1-2-1 PDF, in the background. Returns how many get one."""
 		self.check_permission("write")
+		if not self.email_members:
+			frappe.throw(_("Emails to members are turned off. Tick \"Email Members their 1-2-1 PDF\" and save first."))
 		if not self.seats:
 			frappe.throw(_("Generate the seating first."))
 		with_email = frappe.get_all(

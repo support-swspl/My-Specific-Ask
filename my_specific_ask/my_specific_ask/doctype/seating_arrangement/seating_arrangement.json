@@ -11,6 +11,7 @@
   "meeting_date",
   "column_break_settings",
   "members_per_team",
+  "email_members",
   "total_members",
   "total_teams",
   "schedules_emailed_on",
@@ -51,6 +52,13 @@
    "label": "Members per Power Team",
    "non_negative": 1,
    "reqd": 1
+  },
+  {
+   "default": "0",
+   "description": "On: each seated member is emailed their own 1-2-1 PDF after Generate Seating, and the Email button is shown. Off: no emails are sent.",
+   "fieldname": "email_members",
+   "fieldtype": "Check",
+   "label": "Email Members their 1-2-1 PDF"
   },
   {
    "fieldname": "total_members",
@@ -97,7 +105,7 @@
  ],
  "grid_page_length": 50,
  "links": [],
- "modified": "2026-10-14 18:00:00.000000",
+ "modified": "2026-10-14 19:00:00.000000",
  "modified_by": "Administrator",
  "module": "My Specific Ask",
  "name": "Seating Arrangement",

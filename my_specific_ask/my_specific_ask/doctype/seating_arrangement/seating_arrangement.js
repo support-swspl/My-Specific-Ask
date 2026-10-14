@@ -7,7 +7,9 @@ frappe.ui.form.on("Seating Arrangement", {
 		frm.add_custom_button(__("Generate Seating"), () => ask_team_size(frm)).addClass("btn-primary");
 		if (!frm.is_new() && (frm.doc.seats || []).length) {
 			frm.add_custom_button(__("Conclave 1-2-1 PDF"), () => open_conclave_pdf(frm));
-			frm.add_custom_button(__("Email 1-2-1 PDFs to Members"), () => email_schedules(frm));
+			if (frm.doc.email_members) {
+				frm.add_custom_button(__("Email 1-2-1 PDFs to Members"), () => email_schedules(frm));
+			}
 		}
 		// A new arrangement opens straight on the question, so OK is all it takes
 		if (frm.is_new() && !frm._asked_team_size) {
@@ -15,12 +17,16 @@ frappe.ui.form.on("Seating Arrangement", {
 			ask_team_size(frm);
 		}
 	},
+	email_members(frm) {
+		// Show or hide the Email button with the tick
+		frm.refresh();
+	},
 });
 
 function ask_team_size(frm) {
 	const replacing = (frm.doc.seats || []).length > 0;
 	frappe.prompt(
-		{
+		[{
 			fieldname: "members_per_team",
 			fieldtype: "Int",
 			label: __("Members per Power Team"),
@@ -30,16 +36,27 @@ function ask_team_size(frm) {
 				__("Example: with 6, a Power Team of 8 sits 6 together and its other 2 go to Mixed Power Team 1.") +
 				(replacing ? "<br><b>" + __("This replaces the current seating.") + "</b>" : ""),
 		},
+		{
+			fieldname: "email_members",
+			fieldtype: "Check",
+			label: __("Email Members their 1-2-1 PDF"),
+			default: frm.doc.email_members || 0,
+			description: __("Ticked: after the seating is made, each member is emailed who they do a 1-2-1 with. Not ticked: no emails."),
+		}],
 		(values) => {
 			if (values.members_per_team < 2) {
 				frappe.msgprint(__("Members per Power Team must be at least 2."));
 				return;
 			}
-			frm.set_value("members_per_team", values.members_per_team)
+			frm.set_value({ members_per_team: values.members_per_team, email_members: values.email_members ? 1 : 0 })
 				.then(() => (frm.is_dirty() || frm.is_new() ? frm.save() : null))
 				.then(() => frm.call({ method: "generate_seating", doc: frm.doc, freeze: true, freeze_message: __("Arranging seats...") }))
 				.then(() => {
 					frm.refresh();
+					if (frm.doc.email_members) {
+						send_schedules(frm);
+						return;
+					}
 					const tables = new Set((frm.doc.seats || []).map((seat) => seat.seating_team)).size;
 					frappe.confirm(
 						__("{0} members seated at {1} tables. Download the Conclave 1-2-1 PDF now?", [(frm.doc.seats || []).length, tables]),
@@ -74,15 +91,18 @@ function email_schedules(frm) {
 		__("Email each of the {0} seated members their own 1-2-1 PDF: who they do a 1-2-1 with, round by round?", [
 			frm.doc.seats.length,
 		]) + already,
-		() =>
-			frm.call({ method: "email_schedules", doc: frm.doc, freeze: true }).then((r) => {
-				const { emailed, without_email } = r.message;
-				frappe.msgprint(
-					__("Sending their 1-2-1 PDF to {0} members in the background.", [emailed]) +
-						(without_email ? "<br>" + __("{0} members have no email address and were skipped.", [without_email]) : "")
-				);
-			})
+		() => send_schedules(frm)
 	);
+}
+
+function send_schedules(frm) {
+	frm.call({ method: "email_schedules", doc: frm.doc, freeze: true }).then((r) => {
+		const { emailed, without_email } = r.message;
+		frappe.msgprint(
+			__("Sending their 1-2-1 PDF to {0} members in the background.", [emailed]) +
+				(without_email ? "<br>" + __("{0} members have no email address and were skipped.", [without_email]) : "")
+		);
+	});
 }
 
 function render_seating(frm) {
