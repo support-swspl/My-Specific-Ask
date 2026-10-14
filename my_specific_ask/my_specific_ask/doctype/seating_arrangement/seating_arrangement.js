@@ -7,6 +7,7 @@ frappe.ui.form.on("Seating Arrangement", {
 		frm.add_custom_button(__("Generate Seating"), () => ask_team_size(frm)).addClass("btn-primary");
 		if (!frm.is_new() && (frm.doc.seats || []).length) {
 			frm.add_custom_button(__("Conclave 1-2-1 PDF"), () => open_conclave_pdf(frm));
+			frm.add_custom_button(__("Email 1-2-1 PDFs to Members"), () => email_schedules(frm));
 		}
 		// A new arrangement opens straight on the question, so OK is all it takes
 		if (frm.is_new() && !frm._asked_team_size) {
@@ -59,6 +60,29 @@ function open_conclave_pdf(frm) {
 		no_letterhead: 1,
 	});
 	window.open(`/api/method/frappe.utils.print_format.download_pdf?${params}`);
+}
+
+function email_schedules(frm) {
+	if (frm.is_dirty()) {
+		frappe.msgprint(__("Please save first."));
+		return;
+	}
+	const already = frm.doc.schedules_emailed_on
+		? "<br><br>" + __("They were already emailed on {0}.", [frappe.datetime.str_to_user(frm.doc.schedules_emailed_on)])
+		: "";
+	frappe.confirm(
+		__("Email each of the {0} seated members their own 1-2-1 PDF: who they do a 1-2-1 with, round by round?", [
+			frm.doc.seats.length,
+		]) + already,
+		() =>
+			frm.call({ method: "email_schedules", doc: frm.doc, freeze: true }).then((r) => {
+				const { emailed, without_email } = r.message;
+				frappe.msgprint(
+					__("Sending their 1-2-1 PDF to {0} members in the background.", [emailed]) +
+						(without_email ? "<br>" + __("{0} members have no email address and were skipped.", [without_email]) : "")
+				);
+			})
+	);
 }
 
 function render_seating(frm) {

@@ -44,6 +44,24 @@ class SeatingArrangement(Document):
 				})
 		self.save()
 
+	@frappe.whitelist()
+	def email_schedules(self):
+		"""Email each seated member their own 1-2-1 PDF, in the background. Returns how many get one."""
+		self.check_permission("write")
+		if not self.seats:
+			frappe.throw(_("Generate the seating first."))
+		with_email = frappe.get_all(
+			"Members", filters={"name": ["in", [s.member for s in self.seats]], "email": ["is", "set"]}, pluck="name"
+		)
+		frappe.enqueue(
+			"my_specific_ask.my_specific_ask.doctype.seating_arrangement.seating_arrangement.email_member_schedules",
+			queue="long",
+			timeout=1800,
+			seating_arrangement=self.name,
+			enqueue_after_commit=True,
+		)
+		return {"emailed": len(with_email), "without_email": len(self.seats) - len(with_email)}
+
 
 def get_active_members():
 	members = frappe.get_all(
@@ -109,20 +127,174 @@ def one_to_one_rounds(people):
 
 
 def get_conclave_tables(doc):
-	"""Conclave 1-2-1 Schedule print format: each table with its members and its 1-2-1 rounds."""
-	categories = dict(frappe.get_all(
-		"Members", filters={"name": ["in", [s.member for s in doc.seats] or [""]]}, fields=["name", "category"], as_list=True
-	))
+	"""Each table with its members and its 1-2-1 rounds; the rounds pair the members themselves.
+	Used by the Conclave 1-2-1 Schedule print format and each member's own 1-2-1 PDF."""
+	details = {
+		m.name: m
+		for m in frappe.get_all(
+			"Members",
+			filters={"name": ["in", [s.member for s in doc.seats] or [""]]},
+			fields=["name", "category", "mobile_number", "email"],
+		)
+	}
 	tables = {}
 	for seat in doc.seats:
 		table = tables.setdefault(seat.seating_team, {"name": seat.seating_team, "type": seat.team_type, "members": []})
+		member = details.get(seat.member) or frappe._dict()
 		table["members"].append(frappe._dict(
+			id=seat.member,
 			name=seat.member_name or seat.member,
 			company=seat.company_name,
-			category=categories.get(seat.member),
+			category=member.category,
+			mobile=member.mobile_number,
+			email=member.email,
 			power_team=seat.power_team_name or seat.power_team,
 		))
 	for number, table in enumerate(tables.values(), start=1):
 		table["number"] = number
-		table["rounds"] = one_to_one_rounds(m.name for m in table["members"])
+		table["rounds"] = one_to_one_rounds(table["members"])
 	return list(tables.values())
+
+
+def get_member_schedule(doc, member, tables=None):
+	"""`member`'s table and, round by round, who they do their 1-2-1 with (None: sitting out)."""
+	for table in tables or get_conclave_tables(doc):
+		me = next((m for m in table["members"] if m.id == member), None)
+		if not me:
+			continue
+		rounds = []
+		for pairs, _out in table["rounds"]:
+			rounds.append(next((b if a is me else a for a, b in pairs if me in (a, b)), None))
+		return frappe._dict(me=me, table=table, rounds=rounds)
+
+
+MEMBER_SCHEDULE_HTML = """<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<style>
+	body { font-family: Helvetica, Arial, sans-serif; font-size: 12px; color: #171717; }
+	h1 { font-size: 20px; margin: 0 0 2px; }
+	.muted { color: #6b7280; }
+	table { width: 100%; border-collapse: collapse; margin: 10px 0 16px; }
+	th, td { border: 1px solid #d1d5db; padding: 6px 8px; text-align: left; vertical-align: top; }
+	th { background: #f3f4f6; }
+	.num { width: 48px; text-align: center; }
+	.out { color: #6b7280; font-style: italic; }
+</style></head><body>
+	<h1>{{ _("Your 1-2-1 Schedule") }}</h1>
+	<div class="muted">{{ doc.title }}{% if doc.meeting_date %} &middot; {{ frappe.format(doc.meeting_date, {"fieldtype": "Date"}) }}{% endif %}</div>
+
+	<p style="font-size: 14px; margin-top: 14px;">
+		<b>{{ s.me.name }}</b>{% if s.me.company %}, {{ s.me.company }}{% endif %}<br>
+		{{ _("You sit at Table {0}: {1}").format(s.table.number, s.table.name) }}
+	</p>
+
+	{% if s.rounds %}
+	<table>
+		<tr><th class="num">{{ _("Round") }}</th><th>{{ _("Your 1-2-1 With") }}</th><th>{{ _("Company") }}</th><th>{{ _("Category") }}</th><th>{{ _("Mobile") }}</th></tr>
+		{% for p in s.rounds %}
+		<tr>
+			<td class="num">{{ loop.index }}</td>
+			{% if p %}
+			<td><b>{{ p.name }}</b></td><td>{{ p.company or "" }}</td><td>{{ p.category or "" }}</td><td>{{ p.mobile or "" }}</td>
+			{% else %}
+			<td colspan="4" class="out">{{ _("Sitting out this round") }}</td>
+			{% endif %}
+		</tr>
+		{% endfor %}
+	</table>
+	{% else %}
+	<p class="muted">{{ _("You are the only member at your table, so there are no 1-2-1 rounds.") }}</p>
+	{% endif %}
+	<p class="muted">{{ _("Do a 1-2-1 with each member above, in this order. Powered by My Specific Ask.") }}</p>
+</body></html>"""
+
+MEMBER_SCHEDULE_EMAIL = """<p>{{ _("Dear {0},").format(s.me.name) }}</p>
+<p>{{ _("Your 1-2-1 schedule for {0} is attached. You sit at Table {1}: {2}.").format(doc.title, s.table.number, s.table.name) }}</p>
+<p>{{ _("Your 1-2-1s, round by round:") }}</p>
+<ol>{% for p in s.rounds %}<li>{% if p %}<b>{{ p.name }}</b>{% if p.company %}, {{ p.company }}{% endif %}{% else %}<i>{{ _("Sitting out") }}</i>{% endif %}</li>{% endfor %}</ol>
+<p>{{ _("Regards,") }}<br>My Specific Ask</p>"""
+
+
+def member_schedule_pdf(doc, schedule):
+	"""(file name, PDF bytes) of one member's own 1-2-1 schedule, from get_member_schedule."""
+	from frappe.utils.pdf import get_pdf
+
+	html = frappe.render_template(MEMBER_SCHEDULE_HTML, {"doc": doc, "s": schedule})
+	return _("1-2-1 Schedule - {0}.pdf").format(schedule.me.name), get_pdf(html)
+
+
+def latest_seating_for(member):
+	"""Name of the most recently generated Seating Arrangement that seats `member`."""
+	parents = frappe.get_all(
+		"Seating Arrangement Seat", filters={"member": member, "parenttype": "Seating Arrangement"}, pluck="parent"
+	)
+	if not parents:
+		return None
+	return frappe.get_all(
+		"Seating Arrangement", filters={"name": ["in", parents]}, order_by="modified desc", limit=1, pluck="name"
+	)[0]
+
+
+def my_member_profile():
+	return frappe.db.get_value("Members", {"user": frappe.session.user}, "name")
+
+
+@frappe.whitelist()
+def get_my_schedule():
+	"""Home page: the newest Seating Arrangement the logged-in member is seated in, if any."""
+	member = my_member_profile()
+	seating = member and latest_seating_for(member)
+	if seating:
+		return frappe.db.get_value("Seating Arrangement", seating, ["name", "title", "meeting_date"], as_dict=True)
+
+
+@frappe.whitelist()
+def download_my_schedule(seating_arrangement: str | None = None, member: str | None = None):
+	"""The logged-in member's own 1-2-1 PDF from their newest seating. An administrator may ask
+	for any member's PDF from any seating."""
+	from my_specific_ask.my_specific_ask.doctype.members.members import is_admin
+
+	if not is_admin():
+		member, seating_arrangement = my_member_profile(), None
+	if not member:
+		frappe.throw(_("This login has no member profile."))
+	seating_arrangement = seating_arrangement or latest_seating_for(member)
+	doc = seating_arrangement and frappe.get_doc("Seating Arrangement", seating_arrangement)
+	schedule = doc and get_member_schedule(doc, member)
+	if not schedule:
+		frappe.throw(_("You have not been given a seat in a Seating Arrangement yet."))
+
+	frappe.local.response.filename, frappe.local.response.filecontent = member_schedule_pdf(doc, schedule)
+	frappe.local.response.type = "pdf"
+
+
+def email_member_schedules(seating_arrangement):
+	"""Background job: email every seated member with an email address their own 1-2-1 PDF."""
+	from email.utils import formataddr
+
+	from frappe.email.doctype.email_account.email_account import EmailAccount
+
+	from my_specific_ask.my_specific_ask.doctype.members.members import APP_TITLE
+
+	doc = frappe.get_doc("Seating Arrangement", seating_arrangement)
+	account = EmailAccount.find_default_outgoing()
+	sender = formataddr((APP_TITLE, account.email_id)) if account and account.email_id else None
+
+	tables = get_conclave_tables(doc)
+	for table in tables:
+		for member in table["members"]:
+			if not member.email:
+				continue
+			schedule = get_member_schedule(doc, member.id, tables)
+			fname, pdf = member_schedule_pdf(doc, schedule)
+			frappe.sendmail(
+				recipients=member.email,
+				sender=sender,
+				subject=_("Your 1-2-1 Schedule: {0}").format(doc.title),
+				message=frappe.render_template(MEMBER_SCHEDULE_EMAIL, {"doc": doc, "s": schedule}),
+				attachments=[{"fname": fname, "fcontent": pdf}],
+				reference_doctype=doc.doctype,
+				reference_name=doc.name,
+				with_container=True,
+			)
+	frappe.db.set_value(doc.doctype, doc.name, "schedules_emailed_on", frappe.utils.now_datetime(), update_modified=False)

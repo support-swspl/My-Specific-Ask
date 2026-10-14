@@ -13,6 +13,7 @@
   "members_per_team",
   "total_members",
   "total_teams",
+  "schedules_emailed_on",
   "seating_section",
   "seating_preview",
   "seats_section",
@@ -64,6 +65,14 @@
    "read_only": 1
   },
   {
+   "description": "When each member was last emailed their own 1-2-1 PDF",
+   "fieldname": "schedules_emailed_on",
+   "fieldtype": "Datetime",
+   "label": "1-2-1 PDFs Emailed On",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
    "fieldname": "seating_section",
    "fieldtype": "Section Break",
    "label": "Seating"
@@ -88,7 +97,7 @@
  ],
  "grid_page_length": 50,
  "links": [],
- "modified": "2026-10-14 10:00:00.000000",
+ "modified": "2026-10-14 18:00:00.000000",
  "modified_by": "Administrator",
  "module": "My Specific Ask",
  "name": "Seating Arrangement",

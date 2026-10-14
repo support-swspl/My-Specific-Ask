@@ -92,6 +92,7 @@ frappe.msa_my_progress = async function (element) {
 					${next ? __("{0} of {1} Gives", [gives, next.min]) : __("{0} Gives", [gives])}
 				</div>
 			</div>
+			<button class="btn btn-default btn-sm msa-my-schedule" style="display: none;">${__("My 1-2-1 Schedule (PDF)")}</button>
 			<button class="btn btn-primary btn-sm msa-my-profile">${__("My Profile")}</button>
 		</div>`;
 
@@ -99,6 +100,19 @@ frappe.msa_my_progress = async function (element) {
 	element.querySelector(".msa-my-profile").addEventListener("click", () => {
 		frappe.set_route("Form", "Members", me.name);
 	});
+
+	// Once the admin has seated them in a Seating Arrangement: their own 1-2-1 PDF, who they meet round by round
+	const schedule = (
+		await frappe.call("my_specific_ask.my_specific_ask.doctype.seating_arrangement.seating_arrangement.get_my_schedule")
+	).message;
+	if (schedule) {
+		const button = element.querySelector(".msa-my-schedule");
+		button.title = schedule.title;
+		button.style.display = "";
+		button.addEventListener("click", () => {
+			window.open("/api/method/my_specific_ask.my_specific_ask.doctype.seating_arrangement.seating_arrangement.download_my_schedule");
+		});
+	}
 };
 
 // Home page "Top Givers" (a Custom HTML Block set up by setup_home_page in members.py):
