@@ -92,6 +92,12 @@ email_css = ["/assets/my_specific_ask/css/email.css"]
 # ----------
 
 # add methods and filters to jinja environment
+jinja = {
+	"methods": [
+		"my_specific_ask.my_specific_ask.doctype.seating_arrangement.seating_arrangement.get_conclave_tables",
+	],
+}
+
 # jinja = {
 # 	"methods": "my_specific_ask.utils.jinja_methods",
 # 	"filters": "my_specific_ask.utils.jinja_filters"

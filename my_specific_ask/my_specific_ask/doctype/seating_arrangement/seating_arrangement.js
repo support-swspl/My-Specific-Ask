@@ -5,6 +5,9 @@ frappe.ui.form.on("Seating Arrangement", {
 	refresh(frm) {
 		render_seating(frm);
 		frm.add_custom_button(__("Generate Seating"), () => ask_team_size(frm)).addClass("btn-primary");
+		if (!frm.is_new() && (frm.doc.seats || []).length) {
+			frm.add_custom_button(__("Conclave 1-2-1 PDF"), () => open_conclave_pdf(frm));
+		}
 		// A new arrangement opens straight on the question, so OK is all it takes
 		if (frm.is_new() && !frm._asked_team_size) {
 			frm._asked_team_size = true;
@@ -36,12 +39,26 @@ function ask_team_size(frm) {
 				.then(() => frm.call({ method: "generate_seating", doc: frm.doc, freeze: true, freeze_message: __("Arranging seats...") }))
 				.then(() => {
 					frm.refresh();
-					frappe.show_alert({ message: __("Seating generated"), indicator: "green" });
+					const tables = new Set((frm.doc.seats || []).map((seat) => seat.seating_team)).size;
+					frappe.confirm(
+						__("{0} members seated at {1} tables. Download the Conclave 1-2-1 PDF now?", [(frm.doc.seats || []).length, tables]),
+						() => open_conclave_pdf(frm)
+					);
 				});
 		},
 		__("Seating Arrangement"),
 		__("OK")
 	);
+}
+
+function open_conclave_pdf(frm) {
+	const params = new URLSearchParams({
+		doctype: frm.doctype,
+		name: frm.doc.name,
+		format: "Conclave 1-2-1 Schedule",
+		no_letterhead: 1,
+	});
+	window.open(`/api/method/frappe.utils.print_format.download_pdf?${params}`);
 }
 
 function render_seating(frm) {

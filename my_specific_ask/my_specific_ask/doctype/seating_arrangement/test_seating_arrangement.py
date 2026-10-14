@@ -4,7 +4,7 @@
 import frappe
 from frappe.tests import UnitTestCase
 
-from my_specific_ask.my_specific_ask.doctype.seating_arrangement.seating_arrangement import arrange
+from my_specific_ask.my_specific_ask.doctype.seating_arrangement.seating_arrangement import arrange, one_to_one_rounds
 
 
 def members(team, count):
@@ -34,3 +34,16 @@ class UnitTestSeatingArrangement(UnitTestCase):
 		everyone = members("A", 7) + members("B", 3) + members(None, 4)
 		seated = [m.name for t in arrange(everyone, 4) for m in t[2]]
 		self.assertCountEqual(seated, [m.name for m in everyone])
+
+	def test_one_to_one_rounds_meet_everyone_once(self):
+		for size in range(2, 10):
+			people = list(range(size))
+			rounds = one_to_one_rounds(people)
+			pairs = [frozenset(pair) for round_pairs, _out in rounds for pair in round_pairs]
+			self.assertEqual(len(pairs), size * (size - 1) // 2)
+			self.assertEqual(len(set(pairs)), len(pairs))
+			if size % 2:
+				self.assertCountEqual([out for _pairs, out in rounds], people)
+
+	def test_one_member_has_no_rounds(self):
+		self.assertEqual(one_to_one_rounds(["A"]), [])

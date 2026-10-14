@@ -85,3 +85,44 @@ def arrange(members, size):
 	for i in range(0, len(mixed), size):
 		tables.append((f"{MIXED_TEAM} {i // size + 1}", "Mixed", mixed[i:i + size]))
 	return tables
+
+
+def one_to_one_rounds(people):
+	"""Round-robin 1-2-1s for one table: [(pairs, sitting out)], one entry per round. Every two
+	people meet exactly once; with an odd number one person sits out each round."""
+	people = list(people)
+	if len(people) < 2:
+		return []
+	if len(people) % 2:
+		people.append(None)
+	rounds = []
+	for _round in range(len(people) - 1):
+		half = len(people) // 2
+		pairs = list(zip(people[:half], reversed(people[half:])))
+		rounds.append((
+			[(a, b) for a, b in pairs if a is not None and b is not None],
+			next((b if a is None else a for a, b in pairs if a is None or b is None), None),
+		))
+		# Circle method: the first person stays, everyone else moves one place
+		people = [people[0], people[-1], *people[1:-1]]
+	return rounds
+
+
+def get_conclave_tables(doc):
+	"""Conclave 1-2-1 Schedule print format: each table with its members and its 1-2-1 rounds."""
+	categories = dict(frappe.get_all(
+		"Members", filters={"name": ["in", [s.member for s in doc.seats] or [""]]}, fields=["name", "category"], as_list=True
+	))
+	tables = {}
+	for seat in doc.seats:
+		table = tables.setdefault(seat.seating_team, {"name": seat.seating_team, "type": seat.team_type, "members": []})
+		table["members"].append(frappe._dict(
+			name=seat.member_name or seat.member,
+			company=seat.company_name,
+			category=categories.get(seat.member),
+			power_team=seat.power_team_name or seat.power_team,
+		))
+	for number, table in enumerate(tables.values(), start=1):
+		table["number"] = number
+		table["rounds"] = one_to_one_rounds(m.name for m in table["members"])
+	return list(tables.values())

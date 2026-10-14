@@ -115,6 +115,7 @@
  "sort_field": "creation",
  "sort_order": "DESC",
  "states": [],
+ "default_print_format": "Conclave 1-2-1 Schedule",
  "title_field": "title",
  "track_changes": 1
 }
