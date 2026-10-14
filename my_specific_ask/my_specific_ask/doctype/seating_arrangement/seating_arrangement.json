@@ -1,0 +1,120 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "SA-.####",
+ "creation": "2026-10-14 10:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "settings_section",
+  "title",
+  "meeting_date",
+  "column_break_settings",
+  "members_per_team",
+  "total_members",
+  "total_teams",
+  "seating_section",
+  "seating_preview",
+  "seats_section",
+  "seats"
+ ],
+ "fields": [
+  {
+   "fieldname": "settings_section",
+   "fieldtype": "Section Break",
+   "label": "Settings"
+  },
+  {
+   "fieldname": "title",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Title",
+   "reqd": 1
+  },
+  {
+   "fieldname": "meeting_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Meeting Date"
+  },
+  {
+   "fieldname": "column_break_settings",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "6",
+   "description": "Each Power Team is seated in tables of this size. Members left over from every Power Team, and Active members without a Power Team, are seated in Mixed Power Teams of the same size.",
+   "fieldname": "members_per_team",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Members per Power Team",
+   "non_negative": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "total_members",
+   "fieldtype": "Int",
+   "label": "Members Seated",
+   "read_only": 1
+  },
+  {
+   "fieldname": "total_teams",
+   "fieldtype": "Int",
+   "label": "Teams",
+   "read_only": 1
+  },
+  {
+   "fieldname": "seating_section",
+   "fieldtype": "Section Break",
+   "label": "Seating"
+  },
+  {
+   "fieldname": "seating_preview",
+   "fieldtype": "HTML",
+   "label": "Seating Preview"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "seats_section",
+   "fieldtype": "Section Break",
+   "label": "Seats"
+  },
+  {
+   "fieldname": "seats",
+   "fieldtype": "Table",
+   "label": "Seats",
+   "options": "Seating Arrangement Seat"
+  }
+ ],
+ "grid_page_length": 50,
+ "links": [],
+ "modified": "2026-10-14 10:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "My Specific Ask",
+ "name": "Seating Arrangement",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "search_fields": "title, meeting_date",
+ "show_title_field_in_link": 1,
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "title",
+ "track_changes": 1
+}

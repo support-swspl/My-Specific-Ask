@@ -1,0 +1,94 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2026-10-14 10:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "seating_team",
+  "team_type",
+  "member",
+  "member_name",
+  "company_name",
+  "power_team",
+  "power_team_name"
+ ],
+ "fields": [
+  {
+   "columns": 2,
+   "fieldname": "seating_team",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Seated In",
+   "reqd": 1
+  },
+  {
+   "columns": 1,
+   "fieldname": "team_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Type",
+   "options": "Power Team\nMixed"
+  },
+  {
+   "columns": 2,
+   "fieldname": "member",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Member",
+   "options": "Members",
+   "reqd": 1
+  },
+  {
+   "columns": 2,
+   "fetch_from": "member.full_name",
+   "fieldname": "member_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Member Name",
+   "read_only": 1
+  },
+  {
+   "columns": 2,
+   "fetch_from": "member.company_name",
+   "fieldname": "company_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Company Name",
+   "read_only": 1
+  },
+  {
+   "columns": 1,
+   "description": "The member's own Power Team",
+   "fieldname": "power_team",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Own Power Team",
+   "options": "Power Team",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "power_team.power_team_name",
+   "fieldname": "power_team_name",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "Own Power Team Name",
+   "read_only": 1
+  }
+ ],
+ "grid_page_length": 50,
+ "istable": 1,
+ "links": [],
+ "modified": "2026-10-14 10:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "My Specific Ask",
+ "name": "Seating Arrangement Seat",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": []
+}
