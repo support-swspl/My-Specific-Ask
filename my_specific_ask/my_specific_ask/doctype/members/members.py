@@ -573,6 +573,8 @@ HOME_SHORTCUTS = [
 	{"label": "Asks Dashboard", "type": "Page", "link_to": "asks-dashboard"},
 	{"label": "Gives Dashboard", "type": "Page", "link_to": "gives-dashboard"},
 	{"label": "Power Teams", "type": "Page", "link_to": "power-team-dashboard"},
+	# System Manager only: members do not see it, the desk hides shortcuts they cannot open
+	{"label": "Seating Arrangement", "type": "DocType", "link_to": "Seating Arrangement", "doc_view": "List"},
 ]
 
 
