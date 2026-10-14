@@ -15,6 +15,8 @@ class SeatingArrangement(Document):
 	the Power Teams and the members' own Power Team stay as they are."""
 
 	def validate(self):
+		if not self.title:
+			self.title = _("Seating {0}").format(frappe.utils.formatdate(self.meeting_date or frappe.utils.today()))
 		if (self.members_per_team or 0) < 2:
 			frappe.throw(_("Members per Power Team must be at least 2."))
 

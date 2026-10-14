@@ -28,8 +28,8 @@
    "fieldname": "title",
    "fieldtype": "Data",
    "in_list_view": 1,
-   "label": "Title",
-   "reqd": 1
+   "description": "Left empty, it is named after the meeting date (or today).",
+   "label": "Title"
   },
   {
    "fieldname": "meeting_date",

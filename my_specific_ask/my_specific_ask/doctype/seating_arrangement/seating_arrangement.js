@@ -4,28 +4,44 @@
 frappe.ui.form.on("Seating Arrangement", {
 	refresh(frm) {
 		render_seating(frm);
-		if (frm.is_new()) {
-			frm.set_intro(__("Choose how many members sit in each Power Team, save, then click Generate Seating."), "blue");
-			return;
+		frm.add_custom_button(__("Generate Seating"), () => ask_team_size(frm)).addClass("btn-primary");
+		// A new arrangement opens straight on the question, so OK is all it takes
+		if (frm.is_new() && !frm._asked_team_size) {
+			frm._asked_team_size = true;
+			ask_team_size(frm);
 		}
-		frm.add_custom_button(__("Generate Seating"), () => generate(frm)).addClass("btn-primary");
 	},
 });
 
-function generate(frm) {
-	const run = () =>
-		frm.call({ method: "generate_seating", doc: frm.doc, freeze: true, freeze_message: __("Arranging seats...") })
-			.then(() => {
-				frm.refresh();
-				frappe.show_alert({ message: __("Seating generated"), indicator: "green" });
-			});
-
-	const save_then_run = () => (frm.is_dirty() ? frm.save().then(run) : run());
-	if (frm.doc.seats && frm.doc.seats.length) {
-		frappe.confirm(__("This replaces the current seating with a fresh one. Continue?"), save_then_run);
-	} else {
-		save_then_run();
-	}
+function ask_team_size(frm) {
+	const replacing = (frm.doc.seats || []).length > 0;
+	frappe.prompt(
+		{
+			fieldname: "members_per_team",
+			fieldtype: "Int",
+			label: __("Members per Power Team"),
+			default: frm.doc.members_per_team || 6,
+			reqd: 1,
+			description:
+				__("Example: with 6, a Power Team of 8 sits 6 together and its other 2 go to Mixed Power Team 1.") +
+				(replacing ? "<br><b>" + __("This replaces the current seating.") + "</b>" : ""),
+		},
+		(values) => {
+			if (values.members_per_team < 2) {
+				frappe.msgprint(__("Members per Power Team must be at least 2."));
+				return;
+			}
+			frm.set_value("members_per_team", values.members_per_team)
+				.then(() => (frm.is_dirty() || frm.is_new() ? frm.save() : null))
+				.then(() => frm.call({ method: "generate_seating", doc: frm.doc, freeze: true, freeze_message: __("Arranging seats...") }))
+				.then(() => {
+					frm.refresh();
+					frappe.show_alert({ message: __("Seating generated"), indicator: "green" });
+				});
+		},
+		__("Seating Arrangement"),
+		__("OK")
+	);
 }
 
 function render_seating(frm) {
