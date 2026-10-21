@@ -462,7 +462,7 @@ def setup_one_to_one():
 
 def add_one_to_one_to_reports():
 	"""Set up 1-2-1 requests on a site: the Actions column of the Search Gives / Search Asks
-	reports, the "My To Do" menu item, the ToDo "Completed" status and the email footer.
+	reports, the "My To Do" and "Seating Arrangement" menu items, the ToDo "Completed" status and the email footer.
 
 	These live only in the database, so run once per site (safe to repeat):
 	bench --site <site> execute my_specific_ask.my_specific_ask.doctype.members.members.add_one_to_one_to_reports
@@ -500,6 +500,14 @@ def add_one_to_one_to_reports():
 			})
 			sidebar.save(ignore_permissions=True)
 			updated.append("Power Teams menu")
+		# "Seating Arrangement" in the menu: System Manager only, the sidebar hides items members cannot open
+		if not any(item.link_to == "Seating Arrangement" for item in sidebar.items):
+			sidebar.append("items", {
+				"label": "Seating Arrangement", "type": "Link", "link_type": "DocType",
+				"link_to": "Seating Arrangement", "icon": "armchair",
+			})
+			sidebar.save(ignore_permissions=True)
+			updated.append("Seating Arrangement menu")
 		# "Asks Dashboard" and "Gives Dashboard" in the menu, right under Members
 		for label, page, after in (
 			("Asks Dashboard", "asks-dashboard", "Members"),

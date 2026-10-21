@@ -152,8 +152,25 @@ def get_conclave_tables(doc):
 			email=member.email,
 			power_team=seat.power_team_name or seat.power_team,
 		))
+	# "Sales 2" reads like a different team: show the Power Team's name and which of its tables this is
+	def team_of(table):
+		if table["type"] == "Mixed":
+			return _(MIXED_TEAM)
+		return table["members"][0].power_team or table["name"]
+
+	parts = {}
+	for table in tables.values():
+		table["team"] = team_of(table)
+		parts.setdefault((table["type"], table["team"]), []).append(table)
+	for group in parts.values():
+		for part, table in enumerate(group, start=1):
+			table["part"], table["parts"] = part, len(group)
+			table["label"] = _("{0} ({1} of {2})").format(table["team"], part, len(group)) if len(group) > 1 else table["team"]
+
 	for number, table in enumerate(tables.values(), start=1):
 		table["number"] = number
+		for seat, member in enumerate(table["members"], start=1):
+			member.seat, member.table = seat, number
 		table["rounds"] = one_to_one_rounds(table["members"])
 	return list(tables.values())
 
@@ -187,7 +204,7 @@ MEMBER_SCHEDULE_HTML = """<!DOCTYPE html>
 
 	<p style="font-size: 14px; margin-top: 14px;">
 		<b>{{ s.me.name }}</b>{% if s.me.company %}, {{ s.me.company }}{% endif %}<br>
-		{{ _("You sit at Table {0}: {1}").format(s.table.number, s.table.name) }}
+		{{ _("You sit at Table {0}: {1}").format(s.table.number, s.table.label) }}
 	</p>
 
 	{% if s.rounds %}
@@ -211,7 +228,7 @@ MEMBER_SCHEDULE_HTML = """<!DOCTYPE html>
 </body></html>"""
 
 MEMBER_SCHEDULE_EMAIL = """<p>{{ _("Dear {0},").format(s.me.name) }}</p>
-<p>{{ _("Your 1-2-1 schedule for {0} is attached. You sit at Table {1}: {2}.").format(doc.title, s.table.number, s.table.name) }}</p>
+<p>{{ _("Your 1-2-1 schedule for {0} is attached. You sit at Table {1}: {2}.").format(doc.title, s.table.number, s.table.label) }}</p>
 <p>{{ _("Your 1-2-1s, round by round:") }}</p>
 <ol>{% for p in s.rounds %}<li>{% if p %}<b>{{ p.name }}</b>{% if p.company %}, {{ p.company }}{% endif %}{% else %}<i>{{ _("Sitting out") }}</i>{% endif %}</li>{% endfor %}</ol>
 <p>{{ _("Regards,") }}<br>My Specific Ask</p>"""
